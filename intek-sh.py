@@ -82,10 +82,13 @@ def unset(unset_args):
 
 
 def sh_exit(exit_args):
-    print('exit')
-    if check_args(exit_args) and not exit_args[1].isdigit():
-        print('intek-sh: exit:')
-    return False
+    if check_args(exit_args):
+        if exit_args[1].isdigit():
+            print('exit ' + ' '.join(type_in[1:]))
+        else:
+            print('exit\nintek-sh: exit: ' + ' '.join(type_in[1:]))
+    else:
+        print('exit')
 
 
 def run_file(file_args):
@@ -119,7 +122,7 @@ def pwd(_):
 
 def process_function(functions, command, arg):
     functions[command](arg)
-    if command is 'exit':
+    if 'exit' in command:
         return False
     else:
         return True
@@ -136,6 +139,7 @@ def handle_input():
 
 
 def main():
+    global type_in
     flag = True
     functions = {
             'pwd': pwd,
