@@ -29,13 +29,17 @@ def change_dir(dir_path):
 
 def cd(cd_args):
     _path = None
-
     # if args is more than 1 -> path is the last argument
     if check_args(cd_args):
         _path = cd_args[1]
     if _path:
         if _path is '..':
             change_dir('..')
+        elif _path is '~':
+            if 'HOME' in environ:
+                change_dir(environ['HOME'])
+            else:
+                change_dir(environ['XAUTHORITY'].strip('.Xauthority'))
         else:
             try:
                 change_dir(path.abspath(_path))
@@ -81,6 +85,7 @@ def sh_exit(exit_args):
     print('exit')
     if check_args(exit_args) and not exit_args[1].isdigit():
         print('intek-sh: exit:')
+    return False
 
 
 def run_file(file_args):
@@ -108,35 +113,44 @@ def run_file(file_args):
             print("intek-sh: " + file_args[0] + ": command not found")
 
 
+def pwd(_):
+    print(environ['PWD'])
+
+
+def process_function(functions, command, arg):
+    functions[command](arg)
+    if command is 'exit':
+        return False
+    else:
+        return True
+
+
 def handle_input():
     _args = input('intek-sh$ ')
     _args = _args.split(' ')
     type_in = []
     for element in _args:
         if element:
-            type_in.append(i)
+            type_in.append(element)
     return type_in
 
 
 def main():
     flag = True
+    functions = {
+            'pwd': pwd,
+            'cd': cd,
+            'printenv': printenv,
+            'export': export,
+            'unset': unset,
+            'exit': sh_exit
+            }
     while flag:
         type_in = handle_input()
         if type_in:
             command = type_in[0]
-            if 'pwd' in command:
-                print(environ['PWD'])
-            elif 'cd' in command:
-                cd(type_in)
-            elif 'printenv' in command:
-                printenv(type_in)
-            elif 'export' in command:
-                export(type_in)
-            elif 'unset' in command:
-                unset(type_in)
-            elif 'exit' in command:
-                sh_exit(type_in)
-                flag = False
+            if command in functions.keys():
+                flag = process_function(functions, command, type_in)
             else:
                 run_file(type_in)
 
