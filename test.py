@@ -146,7 +146,7 @@ def handle_command():
     else:
         args = args.strip('!')
         for cmd in reversed(history_lst):
-            if args in cmd:
+            if cmd.startswith(args):
                 args = cmd
                 exist = True
                 print(args)
@@ -168,7 +168,7 @@ def main():
             }
     history_lst = []
     while flag:
-        _args = input('intek-sh$ ')
+        _args = input('\033[92m\033[1mintek-sh$\033[0m ')
         args, yes = handle_command()
         type_in = handle_input(args)
         if not yes and _args.startswith('!'):
