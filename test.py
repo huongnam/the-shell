@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from os import chdir, environ, getcwd, path
 from subprocess import run
+from history import history
 
 
 '''
@@ -128,8 +129,7 @@ def process_function(functions, command, arg):
         return True
 
 
-def handle_input():
-    _args = input('intek-sh$ ')
+def handle_input(_args):
     _args = _args.split(' ')
     type_in = []
     for element in _args:
@@ -138,8 +138,24 @@ def handle_input():
     return type_in
 
 
+def handle_command():
+    exist = False
+    args = _args
+    if not args.startswith('!'):
+        history_lst.append(args)
+    else:
+        args = args.strip('!')
+        for cmd in reversed(history_lst):
+            if args in cmd:
+                args = cmd
+                exist = True
+                print(args)
+    return args, exist
+
+
 def main():
-    global type_in
+    global history_lst
+    global _args
     flag = True
     functions = {
             'pwd': pwd,
@@ -147,14 +163,23 @@ def main():
             'printenv': printenv,
             'export': export,
             'unset': unset,
-            'exit': sh_exit
+            'exit': sh_exit,
+            'history': history,
             }
+    history_lst = []
     while flag:
-        type_in = handle_input()
+        _args = input('intek-sh$ ')
+        args, yes = handle_command()
+        type_in = handle_input(args)
+        if not yes and _args.startswith('!'):
+            print('intek-sh: ' + _args + ': event not found')
+            continue
         if type_in:
-            command = type_in[0]
-            if command in functions.keys():
-                flag = process_function(functions, command, type_in)
+            if type_in[0] in functions.keys():
+                if 'history' in type_in[0]:
+                    flag = process_function(functions, type_in[0], history_lst)
+                else:
+                    flag = process_function(functions, type_in[0], type_in)
             else:
                 run_file(type_in)
 
