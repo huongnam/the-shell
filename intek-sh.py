@@ -4,7 +4,6 @@ from subprocess import run
 
 
 '''
-pwd     : print working directory
 cd      : change directory
 printenv: print all or part of environment
 export  : mark each name to be passed to child processes in the environment
@@ -44,12 +43,12 @@ def cd(cd_args):
             try:
                 change_dir(path.abspath(_path))
             except FileNotFoundError:
-                print('intek-sh: cd: ' + _path + ': No such file or directory')
+                print(print_error(_path + ': ', "No such file or directory", "cd: "))
     else:  # if len path is 1 -> jump to HOME
         if 'HOME' in environ:
             change_dir(environ['HOME'])
         else:
-            print('intek-sh: cd: HOME not set')
+            print(print_error("", "HOME not set", "cd: "))
 
 
 def printenv(printenv_args):
@@ -97,15 +96,15 @@ def run_file(file_args):
         try:
             run(file_args[0])
         except PermissionError:
-            print('intek-sh: ' + file_args[0] + ': Permission denied')
+            print(print_error(file_args[0], ": Permission denied"))
         except FileNotFoundError:
-            print("intek-sh: " + file_args[0] + ": No such file or directory")
+            print(print_error(file_args[0], ": No such file or directory"))
     else:
         try:
             # find all the possible paths
             PATH = environ['PATH'].split(':')
         except KeyError as e:
-            print("intek-sh: " + file_args[0] + ": command not found")
+            print(print_error(file_args[0], ": command not found"))
             return e
         for item in PATH:
             if path.exists(item+'/'+file_args[0]):
@@ -113,15 +112,15 @@ def run_file(file_args):
                 check = True
                 break
         if not check:  # if the command didn't run
-            print("intek-sh: " + file_args[0] + ": command not found")
+            print(print_error(file_args[0], ": command not found"))
 
 
-def pwd(_):
-    print(environ['PWD'])
+def print_error(arg, _error, _cd=''):
+    return "intek-sh: " + _cd + arg + _error
 
 
-def process_function(functions, command, arg):
-    functions[command](arg)
+def process_function(functions, command, args):
+    functions[command](args)
     if 'exit' in command:
         return False
     else:
@@ -142,7 +141,6 @@ def main():
     global type_in
     flag = True
     functions = {
-            'pwd': pwd,
             'cd': cd,
             'printenv': printenv,
             'export': export,
