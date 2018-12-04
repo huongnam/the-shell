@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
 from os import chdir, environ, getcwd, path
 from subprocess import run
-from history import history
+from history import *
 
 
 '''
-pwd     : print working directory
 cd      : change directory
 printenv: print all or part of environment
 export  : mark each name to be passed to child processes in the environment
@@ -45,12 +44,13 @@ def cd(cd_args):
             try:
                 change_dir(path.abspath(_path))
             except FileNotFoundError:
-                print('intek-sh: cd: ' + _path + ': No such file or directory')
+                print(print_error(_path + ': ', "No such file or"
+                      " directory", "cd: "))
     else:  # if len path is 1 -> jump to HOME
         if 'HOME' in environ:
             change_dir(environ['HOME'])
         else:
-            print('intek-sh: cd: HOME not set')
+            print(print_error("", "HOME not set", "cd: "))
 
 
 def printenv(printenv_args):
@@ -98,15 +98,15 @@ def run_file(file_args):
         try:
             run(file_args[0])
         except PermissionError:
-            print('intek-sh: ' + file_args[0] + ': Permission denied')
+            print(print_error(file_args[0], ": Permission denied"))
         except FileNotFoundError:
-            print("intek-sh: " + file_args[0] + ": No such file or directory")
+            print(print_error(file_args[0], ": No such file or directory"))
     else:
         try:
             # find all the possible paths
             PATH = environ['PATH'].split(':')
         except KeyError as e:
-            print("intek-sh: " + file_args[0] + ": command not found")
+            print(print_error(file_args[0], ": command not found"))
             return e
         for item in PATH:
             if path.exists(item+'/'+file_args[0]):
@@ -114,15 +114,15 @@ def run_file(file_args):
                 check = True
                 break
         if not check:  # if the command didn't run
-            print("intek-sh: " + file_args[0] + ": command not found")
+            print(print_error(file_args[0], ": command not found"))
 
 
-def pwd(_):
-    print(environ['PWD'])
+def print_error(arg, _error, _cd=''):
+    return "intek-sh: " + _cd + arg + _error
 
 
-def process_function(functions, command, arg):
-    functions[command](arg)
+def process_function(functions, command, args):
+    functions[command](args)
     if 'exit' in command:
         return False
     else:
@@ -134,58 +134,60 @@ def handle_input(_args):
     type_in = []
     for element in _args:
         if element:
+            # if '$?' in element:
+            #     element = element.replace('$?', exit_code)
+            # else:
             type_in.append(element)
     return type_in
 
 
-def handle_command():
-    exist = False
-    args = _args
-    if not args.startswith('!'):
-        history_lst.append(args)
-    else:
-        args = args.strip('!')
-        for cmd in reversed(history_lst):
-            if cmd.startswith(args):
-                args = cmd
-                exist = True
-                print(args)
-    return args, exist
-
-
 def main():
-    global history_lst
-    global _args
+    global type_in
     flag = True
+    special_cases = ['! ', '!', '!=']
+    history_lst = []
     functions = {
-            'pwd': pwd,
             'cd': cd,
             'printenv': printenv,
             'export': export,
             'unset': unset,
             'exit': sh_exit,
-            'history': history,
+            'history': print_history
             }
-    history_lst = []
     while flag:
-        _args = input('\033[92m\033[1mintek-sh$\033[0m ')
-        args, yes = handle_command()
-        type_in = handle_input(args)
-        if not yes and _args.startswith('!'):
-            print('intek-sh: ' + _args + ': event not found')
-            continue
-        if type_in:
-            if type_in[0] in functions.keys():
-                if 'history' in type_in[0]:
-                    flag = process_function(functions, type_in[0], history_lst)
+        try:
+            _args = input('\033[92m\033[1mintek-sh$\033[0m ')
+            # expand history_file
+            if not _args.startswith('!') and _args not in special_cases:
+                if '!#' not in _args and '^' not in _args:
+                    write_history_file(_args)
+
+            # get args and check existence
+            history_lst = read_history_file()
+            args, exist, hashtag_flag = handle_command(_args, history_lst)
+
+            # when to continue or pass
+            continue_flag, pass_flag, args = handle_special_case(exist, args)
+            if continue_flag:
+                continue
+            elif pass_flag:
+                pass
+
+            type_in = handle_input(args)
+            if type_in:
+                if type_in[0] in functions.keys():
+                    if 'history' in type_in[0]:
+                        history_lst = read_history_file()
+                        flag = process_function(functions, type_in[0],
+                                                history_lst)
+                    else:
+                        flag = process_function(functions, type_in[0], type_in)
                 else:
-                    flag = process_function(functions, type_in[0], type_in)
-            else:
-                run_file(type_in)
+                    run_file(type_in)
+        except BaseException:
+            print('\nintek-sh: sorry this is out of my capability')
+            continue
 
 
 if __name__ == '__main__':
-    try:
-        main()
-    except EOFError:
-        pass
+    main()
