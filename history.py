@@ -40,7 +40,9 @@ def print_history(history_lst):
     for index, element in enumerate(history_lst):
         # justify columns
         element = element.strip('\n')
+        # right justify the numbers
         _order = str(index+1).rjust(len(str(len(history_lst))), ' ')
+        # left justify the commands
         command = element.ljust(len(max(history_lst, key=len)), ' ')
         print(' ' * 4 + _order + '  ' + command)
 
@@ -52,7 +54,6 @@ def print_args(args, cmd):
     return args.strip('\n'), True
 
 
-# handle special case of '!'
 def handle_special_case(exist, args):
     continue_flag = False
     pass_flag = False
@@ -75,8 +76,10 @@ def handle_special_case(exist, args):
             elif len(args) > 2:
                 args = args.strip('!').strip(' ')
                 pass_flag = True
+    # substitution errors
     elif args.startswith('^') and sub_failed:
         continue_flag = True
+    # out of capability
     elif alert:
         continue_flag = True
     return continue_flag, pass_flag, args
@@ -89,7 +92,9 @@ def handle_emotion_prefix(args, history_lst):
     # command type: '!?'
     if args[1:].startswith('?'):
         args = args.strip('!?')
+        # traverse through history_lst in reversed order
         for cmd in reversed(history_lst):
+            # if cmd has args -> take the cmd and break the loop
             if args in cmd:
                 args, exist = print_args(args, cmd.strip('\n'))
                 break
@@ -101,7 +106,7 @@ def handle_emotion_prefix(args, history_lst):
         # command type: '!!:s/string1/string2/'
         if ':' in args[1:]:
             if 's/' in args[1:]:
-                # command is !!:s/p -> pop p out of string
+                # command is !!:s/s1 -> pop s1 out of string
                 if args.count('/') is 1:
                     temp_lst = []
                     for w in temp:
@@ -114,13 +119,15 @@ def handle_emotion_prefix(args, history_lst):
                     else:  # if p not in string -> raise error
                         print('intek-sh: :s' + args + ': substitution failed')
                         sub_failed2 = True
+                # command has both s1 and s2 -> replace s1 with s2
                 else:
                     arg_lst = args[1:].strip('/').split('/')
                     pos = new_args.find(':')
                     new_args = new_args[:pos].replace(arg_lst[-2], arg_lst[-1])
                     args, exist = print_args(args, new_args)
+                    # after replacing append the args to history_lst
                     write_history_file(args)
-            else:
+            else:  # command doesn't follow the format
                 print('intek-sh: ' + args[2:] + ': substitution failed')
                 sub_failed2 = True
         else:
@@ -130,6 +137,7 @@ def handle_emotion_prefix(args, history_lst):
     # command type: '!n'
     elif args[1].isdigit():
         prefix = ''
+        # get the prefix (n)
         for word in args[1:]:
             if word.isdigit():
                 prefix += word
@@ -154,8 +162,9 @@ def handle_emotion_prefix(args, history_lst):
                                     history_lst[len(history_lst) - number])
             args, exist = print_args(args, new_args.strip('\n'))
 
-    # command type: '!string'
+    # command starts with '!string'
     elif args[1].isalpha():
+        # command type: '!string randomstring'
         if ' ' in args:
             args_lst = args.split(' ')
             for cmd in reversed(history_lst):
@@ -164,7 +173,7 @@ def handle_emotion_prefix(args, history_lst):
                     args_lst.insert(0, cmd.strip('\n'))
                     args, exist = print_args(args, ' '.join(args_lst))
                     break
-        else:
+        else:  # command type: '!string'
             for cmd in reversed(history_lst):
                 if cmd.startswith(args[1:]):
                     args, exist = print_args(args, cmd.strip('\n'))
