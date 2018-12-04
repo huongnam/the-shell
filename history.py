@@ -64,20 +64,22 @@ def handle_special_case(exist, args):
             else:
                 print('intek-sh: ' + args + ': event not found')
                 continue_flag = True
-        else:
+        else:  # match event in history_lst but
             # command starts with ! and followed by a blank space
             if len(args) is 1 or args == '! ':
                 continue_flag = True
             # command starts with '!=' -> command not found
             elif args[1] is '=':
                 pass_flag = True
+            # command type: ! with multiple spaces and random string
             elif len(args) > 2:
+                args = args.strip('!').strip(' ')
                 pass_flag = True
     elif args.startswith('^') and sub_failed:
         continue_flag = True
     elif alert:
         continue_flag = True
-    return continue_flag, pass_flag
+    return continue_flag, pass_flag, args
 
 
 def handle_emotion_prefix(args, history_lst):
@@ -89,7 +91,7 @@ def handle_emotion_prefix(args, history_lst):
         args = args.strip('!?')
         for cmd in reversed(history_lst):
             if args in cmd:
-                args, exist = print_args(args, cmd)
+                args, exist = print_args(args, cmd.strip('\n'))
                 break
 
     # command type: '!!'
@@ -99,11 +101,25 @@ def handle_emotion_prefix(args, history_lst):
         # command type: '!!:s/string1/string2/'
         if ':' in args[1:]:
             if 's/' in args[1:]:
-                arg_lst = args[1:].strip('/').split('/')
-                new_args = new_args[:new_args.find(':')].replace(arg_lst[-2],
-                                                                 arg_lst[-1])
-                args, exist = print_args(args, new_args)
-                write_history_file(args)
+                # command is !!:s/p -> pop p out of string
+                if args.count('/') is 1:
+                    temp_lst = []
+                    for w in temp:
+                        temp_lst.append(w)
+                    if args[5:] in temp_lst:
+                        temp_lst.remove(args[5:])
+                        new_args = ''.join(temp_lst)
+                        args, exist = print_args(args, new_args)
+                        write_history_file(args)
+                    else:  # if p not in string -> raise error
+                        print('intek-sh: :s' + args + ': substitution failed')
+                        sub_failed2 = True
+                else:
+                    arg_lst = args[1:].strip('/').split('/')
+                    pos = new_args.find(':')
+                    new_args = new_args[:pos].replace(arg_lst[-2], arg_lst[-1])
+                    args, exist = print_args(args, new_args)
+                    write_history_file(args)
             else:
                 print('intek-sh: ' + args[2:] + ': substitution failed')
                 sub_failed2 = True
@@ -122,7 +138,7 @@ def handle_emotion_prefix(args, history_lst):
         number = int(prefix)
         if (number-1) < len(history_lst):
             new_args = args.replace('!' + prefix, history_lst[number-1])
-            args, exist = print_args(args, new_args)
+            args, exist = print_args(args, new_args.strip('\n'))
 
     # command type: '!-n'
     elif args[1] is '-' and args[2].isdigit():
@@ -136,7 +152,7 @@ def handle_emotion_prefix(args, history_lst):
         if number < len(history_lst):
             new_args = args.replace('!' + '-' + prefix,
                                     history_lst[len(history_lst) - number])
-            args, exist = print_args(args, new_args)
+            args, exist = print_args(args, new_args.strip('\n'))
 
     # command type: '!string'
     elif args[1].isalpha():

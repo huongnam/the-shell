@@ -163,7 +163,7 @@ def main():
         args, exist, hashtag_flag = handle_command(_args, history_lst)
 
         # when to continue or pass
-        continue_flag, pass_flag = handle_special_case(exist, args)
+        continue_flag, pass_flag, args = handle_special_case(exist, args)
         if continue_flag:
             continue
         elif pass_flag:
