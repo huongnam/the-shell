@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 from os import chdir, environ, getcwd, path
 from subprocess import run
-from history import *
+from history import write_history_file, read_history_file, print_history
+from history import handle_command, handle_special_case
 
 
 '''
@@ -140,6 +141,7 @@ def handle_input(_args):
 
 def main():
     global type_in
+    curpath = environ['PWD']
     flag = True
     special_cases = ['! ', '!', '!=']
     history_lst = []
@@ -152,37 +154,47 @@ def main():
             'history': print_history
             }
     while flag:
-        _args = input('\033[92m\033[1mintek-sh$\033[0m ')
-        # expand history_file
-        if not _args.startswith('!') and _args not in special_cases:
-            if '!#' not in _args and '^' not in _args:
-                write_history_file(_args)
+        try:
+            written = False
+            _args = input('\033[92m\033[1mintek-sh$\033[0m ')
+            # expand history_file
+            if not _args.startswith('!') and _args not in special_cases:
+                if '!#' not in _args and '^' not in _args:
+                    write_history_file(_args, curpath)
+                    written = True
 
-        # get args and check existence
-        history_lst = read_history_file()
-        args, exist, hashtag_flag = handle_command(_args, history_lst)
+            # get args and check existence
+            try:
+                history_lst = read_history_file(curpath)
+            except FileNotFoundError:
+                print('intek-sh: there\'s nothing in the history list!')
+                continue
+            args, exist = handle_command(_args, history_lst)
+            if not written:
+                write_history_file(args, curpath)
 
-        # when to continue or pass
-        continue_flag, pass_flag, args = handle_special_case(exist, args)
-        if continue_flag:
-            continue
-        elif pass_flag:
-            pass
+            # when to continue or pass
+            continue_flag, pass_flag, args = handle_special_case(exist, args)
+            if continue_flag:
+                continue
+            elif pass_flag:
+                pass
 
-        type_in = handle_input(args)
-        if type_in:
-            if type_in[0] in functions.keys():
-                if 'history' in type_in[0]:
-                    history_lst = read_history_file()
-                    flag = process_function(functions, type_in[0], history_lst)
+            type_in = handle_input(args)
+            if type_in:
+                if type_in[0] in functions.keys():
+                    if 'history' in type_in[0]:
+                        history_lst = read_history_file(curpath)
+                        flag = process_function(functions, type_in[0],
+                                                history_lst)
+                    else:
+                        flag = process_function(functions, type_in[0], type_in)
                 else:
-                    flag = process_function(functions, type_in[0], type_in)
-            else:
-                run_file(type_in)
+                    run_file(type_in)
+        except BaseException:
+            print('\nintek-sh: something went wrong...')
+            continue
 
 
 if __name__ == '__main__':
-    try:
-        main()
-    except EOFError:
-        pass
+    main()

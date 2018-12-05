@@ -1,3 +1,4 @@
+from os import path
 '''
 Event Designators
      An event designator is a reference to a command line entry in
@@ -23,14 +24,14 @@ Event Designators
 '''
 
 
-def write_history_file(args):
-    history_file = open('.intek-sh_history', 'a')
+def write_history_file(args, curpath):
+    history_file = open(curpath + '/.intek-sh_history', 'a')
     history_file.write(args + '\n')
     history_file.close()
 
 
-def read_history_file():
-    history_file = open('.intek-sh_history', 'r')
+def read_history_file(curpath):
+    history_file = open(curpath + '/.intek-sh_history', 'r')
     history_lst = history_file.readlines()
     history_file.close()
     return history_lst
@@ -115,7 +116,6 @@ def handle_emotion_prefix(args, history_lst):
                         temp_lst.remove(args[5:])
                         new_args = ''.join(temp_lst)
                         args, exist = print_args(args, new_args)
-                        write_history_file(args)
                     else:  # if p not in string -> raise error
                         print('intek-sh: :s' + args + ': substitution failed')
                         sub_failed2 = True
@@ -125,14 +125,11 @@ def handle_emotion_prefix(args, history_lst):
                     pos = new_args.find(':')
                     new_args = new_args[:pos].replace(arg_lst[-2], arg_lst[-1])
                     args, exist = print_args(args, new_args)
-                    # after replacing append the args to history_lst
-                    write_history_file(args)
             else:  # command doesn't follow the format
                 print('intek-sh: ' + args[2:] + ': substitution failed')
                 sub_failed2 = True
         else:
             args, exist = print_args(args, new_args)
-            write_history_file(args)
 
     # command type: '!n'
     elif args[1].isdigit():
@@ -196,7 +193,6 @@ def handle_caret(args, history_lst):
             temp_lst.remove(args[1:])
             new_args = ''.join(temp_lst)
             args, exist = print_args(args, new_args)
-            write_history_file(args)
         else:
             print('intek-sh: :s' + args + ': substitution failed')
             sub_failed = True
@@ -205,7 +201,6 @@ def handle_caret(args, history_lst):
         if args_lst[0] in temp:
             new_args = temp.replace(args_lst[0], args_lst[-1])
             args, exist = print_args(args, new_args)
-            write_history_file(args)
         else:
             print('intek-sh: :s' + args + ': substitution failed')
             sub_failed = True
@@ -217,14 +212,13 @@ def handle_command(args, history_lst):
     global alert
     alert = False
     exist = False
-    hashtag = False
     if args.startswith('!'):
         if len(args) is 1 or args[1] is ' ' or args[1] is '=':
-            return args, True, hashtag
+            return args, True
         elif args[1] is '(':
-            return args[0], exist, hashtag
+            return args[0], exist
         elif args[1] is '#':
-            return args, True, hashtag
+            return args, True
         else:
             args, exist = handle_emotion_prefix(args, history_lst)
     # command type: '^string1^string2^'
@@ -233,4 +227,4 @@ def handle_command(args, history_lst):
     elif '!#' in args:
         print('intek-sh: sorry this is out of my capability')
         alert = True
-    return args, exist, hashtag
+    return args, exist
