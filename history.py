@@ -45,6 +45,7 @@ def print_history(history_lst):
         # left justify the commands
         command = element.ljust(len(max(history_lst, key=len)), ' ')
         print(' ' * 4 + _order + '  ' + command)
+    return 0
 
 
 # replace args as cmd and print it

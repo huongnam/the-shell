@@ -29,57 +29,72 @@ def change_dir(dir_path):
 
 def cd(cd_args):
     _path = None
+    exit_code = None
     # if args is more than 1 -> path is the last argument
     if check_args(cd_args):
         _path = cd_args[1]
     if _path:
         if _path is '..':
             change_dir('..')
-        elif _path is '~':
-            if 'HOME' in environ:
-                change_dir(environ['HOME'])
-            else:
-                change_dir(environ['XAUTHORITY'].strip('.Xauthority'))
+            exit_code = 0
         else:
             try:
                 change_dir(path.abspath(_path))
+                exit_code = 0
             except FileNotFoundError:
                 print(print_error(_path + ': ', "No such file or"
                       " directory", "cd: "))
+                exit_code = 1
     else:  # if len path is 1 -> jump to HOME
         if 'HOME' in environ:
             change_dir(environ['HOME'])
+            exit_code = 0
         else:
             print(print_error("", "HOME not set", "cd: "))
+            exit_code = 1
+    return exit_code
 
 
 def printenv(printenv_args):
     # if len type_in is 1 -> print all the environment
+    exit_code = None
     if not check_args(printenv_args):
+        exit_code = 0
         for key in environ.keys():
             print(key + '=' + environ[key])
     else:  # print the value of the key(printenv_args[1])
         if printenv_args[1] in environ.keys():
+            exit_code = 0
             print(environ[printenv_args[1]])
+        else:
+            exit_code = 1
+    return exit_code
 
 
 def export(export_args):
+    exit_code = None
     if check_args(export_args):
         variables = export_args[1:]
         for variable in variables:
             if '=' not in variable:
                 environ[variable] = ''
+                exit_code = 0
             else:
                 variable = variable.split('=')
                 environ[variable[0]] = variable[1]
+                exit_code = 0
+    return exit_code
 
 
 def unset(unset_args):
+    exit_code = None
     if check_args(unset_args):
         variables = unset_args[1:]
         for variable in variables:
             if variable in environ.keys():
                 del environ[variable]
+                exit_code = 0
+    return exit_code
 
 
 def sh_exit(exit_args):
@@ -94,27 +109,35 @@ def sh_exit(exit_args):
 
 def run_file(file_args):
     check = False
+    exit_code = None
     if './' in file_args[0]:
         try:
-            run(file_args[0])
+            child = run(file_args[0])
+            exit_code = child.returncode
         except PermissionError:
             print(print_error(file_args[0], ": Permission denied"))
+            exit_code = 2
         except FileNotFoundError:
             print(print_error(file_args[0], ": No such file or directory"))
+            exit_code = 127
     else:
         try:
             # find all the possible paths
             PATH = environ['PATH'].split(':')
         except KeyError as e:
             print(print_error(file_args[0], ": command not found"))
+            exit_code = 127
             return e
         for item in PATH:
             if path.exists(item+'/'+file_args[0]):
-                run([item+'/'+file_args.pop(0)]+file_args)
+                child = run([item+'/'+file_args.pop(0)]+file_args)
+                exit_code = child.returncode
                 check = True
                 break
         if not check:  # if the command didn't run
             print(print_error(file_args[0], ": command not found"))
+            exit_code = 127
+    return exit_code
 
 
 def print_error(arg, _error, _cd=''):
@@ -122,11 +145,11 @@ def print_error(arg, _error, _cd=''):
 
 
 def process_function(functions, command, args):
-    functions[command](args)
+    exit_code = functions[command](args)
     if 'exit' in command:
-        return False
+        return False, exit_code
     else:
-        return True
+        return True, exit_code
 
 
 def handle_input(_args):
@@ -134,15 +157,18 @@ def handle_input(_args):
     type_in = []
     for element in _args:
         if element:
-            # if '$?' in element:
-            #     element = element.replace('$?', exit_code)
-            # else:
-            type_in.append(element)
+            if '$?' in element:
+                element = element.replace('$?', str(exit_code))
+                type_in.append(element)
+            else:
+                type_in.append(element)
     return type_in
 
 
 def main():
     global type_in
+    global exit_code
+    exit_code = 0
     flag = True
     special_cases = ['! ', '!', '!=']
     history_lst = []
@@ -155,38 +181,39 @@ def main():
             'history': print_history
             }
     while flag:
-        try:
-            _args = input('\033[92m\033[1mintek-sh$\033[0m ')
-            # expand history_file
-            if not _args.startswith('!') and _args not in special_cases:
-                if '!#' not in _args and '^' not in _args:
-                    write_history_file(_args)
+        # try:
+        _args = input('\033[92m\033[1mintek-sh$\033[0m ')
+        # expand history_file
+        if not _args.startswith('!') and _args not in special_cases:
+            if '!#' not in _args and '^' not in _args:
+                write_history_file(_args)
 
-            # get args and check existence
-            history_lst = read_history_file()
-            args, exist, hashtag_flag = handle_command(_args, history_lst)
+        # get args and check existence
+        history_lst = read_history_file()
+        args, exist, hashtag_flag = handle_command(_args, history_lst)
 
-            # when to continue or pass
-            continue_flag, pass_flag, args = handle_special_case(exist, args)
-            if continue_flag:
-                continue
-            elif pass_flag:
-                pass
-
-            type_in = handle_input(args)
-            if type_in:
-                if type_in[0] in functions.keys():
-                    if 'history' in type_in[0]:
-                        history_lst = read_history_file()
-                        flag = process_function(functions, type_in[0],
-                                                history_lst)
-                    else:
-                        flag = process_function(functions, type_in[0], type_in)
-                else:
-                    run_file(type_in)
-        except BaseException:
-            print('\nintek-sh: sorry this is out of my capability')
+        # when to continue or pass
+        continue_flag, pass_flag, args = handle_special_case(exist, args)
+        if continue_flag:
             continue
+        elif pass_flag:
+            pass
+
+        type_in = handle_input(args)
+        if type_in:
+            if type_in[0] in functions.keys():
+                if 'history' in type_in[0]:
+                    history_lst = read_history_file()
+                    flag, exit_code = process_function(functions, type_in[0],
+                                                       history_lst)
+                else:
+                    flag, exit_code = process_function(functions, type_in[0],
+                                                       type_in)
+            else:
+                exit_code = run_file(type_in)
+        # except BaseException:
+        #     print('\nintek-sh: sorry this is out of my capability')
+        #     continue
 
 
 if __name__ == '__main__':
