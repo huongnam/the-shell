@@ -13,11 +13,6 @@ unset   : remove each variable or function name
 exit    : end process
 '''
 
-# muoons ddeer ddau cungx duowjc hAR HAR HAR ?????
-# ai nois phari ddeer treen cungf?
-# nhunwg maf ai no is phari ddeer treen cungf?
-# casi gif dayaj nhinf doo
-# handle_emotion_prefix(cai gi z)
 # check if args is more than 1
 def check_args(args):
     if len(args) is not 1:
