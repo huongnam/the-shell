@@ -29,4 +29,7 @@ Nam: quoting (quotes & escape characters) ★✩✩✩
      command substitution with the backquotes ★★✩✩
 Tran: handling the exit status of commands ★✩✩✩
      the command history with the builtins history and ! ★★✩✩
+<<<<<<< HEAD
 
+=======
+>>>>>>> develop
