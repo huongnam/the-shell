@@ -139,6 +139,16 @@ def handle_input(_args):
     return type_in
 
 
+def get_args(curpath, _args):
+    if path.exists(curpath + '/.intek-sh_history'):
+        history_lst = read_history_file(curpath)
+    else:
+        print('intek-sh: there\'s nothing in the history list!')
+        return None, False
+    args, exist = handle_command(_args, history_lst)
+    return args, exist
+
+
 def main():
     global type_in
     curpath = environ['PWD']
@@ -164,13 +174,10 @@ def main():
                     written = True
 
             # get args and check existence
-            try:
-                history_lst = read_history_file(curpath)
-            except FileNotFoundError:
-                print('intek-sh: there\'s nothing in the history list!')
+            args, exist = get_args(curpath, _args)
+            if not args and not exist:
                 continue
-            args, exist = handle_command(_args, history_lst)
-            if not written:
+            if not written and not args.startswith('!'):
                 write_history_file(args, curpath)
 
             # when to continue or pass
