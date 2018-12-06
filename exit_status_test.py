@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 from os import chdir, environ, getcwd, path
 from subprocess import run
-from history import *
 
 
 '''
@@ -177,43 +176,17 @@ def main():
             'printenv': printenv,
             'export': export,
             'unset': unset,
-            'exit': sh_exit,
-            'history': print_history
+            'exit': sh_exit
             }
     while flag:
-        # try:
         _args = input('\033[92m\033[1mintek-sh$\033[0m ')
-        # expand history_file
-        if not _args.startswith('!') and _args not in special_cases:
-            if '!#' not in _args and '^' not in _args:
-                write_history_file(_args)
-
-        # get args and check existence
-        history_lst = read_history_file()
-        args, exist, hashtag_flag = handle_command(_args, history_lst)
-
-        # when to continue or pass
-        continue_flag, pass_flag, args = handle_special_case(exist, args)
-        if continue_flag:
-            continue
-        elif pass_flag:
-            pass
-
-        type_in = handle_input(args)
+        type_in = handle_input(_args)
         if type_in:
             if type_in[0] in functions.keys():
-                if 'history' in type_in[0]:
-                    history_lst = read_history_file()
-                    flag, exit_code = process_function(functions, type_in[0],
-                                                       history_lst)
-                else:
-                    flag, exit_code = process_function(functions, type_in[0],
-                                                       type_in)
+                flag, exit_code = process_function(functions, type_in[0],
+                                                   type_in)
             else:
                 exit_code = run_file(type_in)
-        # except BaseException:
-        #     print('\nintek-sh: sorry this is out of my capability')
-        #     continue
 
 
 if __name__ == '__main__':
