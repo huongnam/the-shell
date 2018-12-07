@@ -2,6 +2,7 @@
 from os import chdir, environ, getcwd, path
 from subprocess import run
 from exit_status import get_exit_status
+from sys import exit
 
 
 '''
@@ -36,36 +37,36 @@ def cd(cd_args):
     if _path:
         if _path is '..':
             change_dir('..')
-            environ['EXITCODE'] = '0'
+            exit_code = 0
         else:
             try:
                 change_dir(path.abspath(_path))
-                environ['EXITCODE'] = '0'
+                exit_code = 0
             except FileNotFoundError:
                 print(print_error(_path + ': ', "No such file or"
                       " directory", "cd: "))
-                environ['EXITCODE'] = '1'
+                exit_code = 1
     else:  # if len path is 1 -> jump to HOME
         if 'HOME' in environ:
             change_dir(environ['HOME'])
-            environ['EXITCODE'] = '0'
+            exit_code = 0
         else:
             print(print_error("", "HOME not set", "cd: "))
-            environ['EXITCODE'] = '1'
+            exit_code = 1
 
 
 def printenv(printenv_args):
     # if len type_in is 1 -> print all the environment
     if not check_args(printenv_args):
-        environ['EXITCODE'] = '0'
+        exit_code = 0
         for key in environ.keys():
             print(key + '=' + environ[key])
     else:  # print the value of the key(printenv_args[1])
         if printenv_args[1] in environ.keys():
-            environ['EXITCODE'] = '0'
+            exit_code = 0
             print(environ[printenv_args[1]])
         else:
-            environ['EXITCODE'] = '1'
+            exit_code = 1
 
 
 def export(export_args):
@@ -74,11 +75,11 @@ def export(export_args):
         for variable in variables:
             if '=' not in variable:
                 environ[variable] = ''
-                environ['EXITCODE'] = '0'
+                exit_code = 0
             else:
                 variable = variable.split('=')
                 environ[variable[0]] = variable[1]
-                environ['EXITCODE'] = '0'
+                exit_code = 0
 
 
 def unset(unset_args):
@@ -87,20 +88,21 @@ def unset(unset_args):
         for variable in variables:
             if variable in environ.keys():
                 del environ[variable]
-                environ['EXITCODE'] = '0'
+                exit_code = 0
 
 
 def sh_exit(exit_args):
     if check_args(exit_args):
         if exit_args[1].isdigit():
             print('exit ' + ' '.join(exit_args[1:]))
-            environ['EXITCODE'] = ' '.join(exit_args[1:])
+            exit_code = int(' '.join(exit_args[1:]))
         else:
             print('exit\nintek-sh: exit: ' + ' '.join(exit_args[1:]))
-            environ['EXITCODE'] = '0'
+            exit_code = 0
     else:
         print('exit')
-        environ['EXITCODE'] = '0'
+        exit_code = 0
+    exit(exit_code)
 
 
 def run_file(file_args):
@@ -108,30 +110,30 @@ def run_file(file_args):
     if './' in file_args[0]:
         try:
             child = run(file_args[0])
-            environ['EXITCODE'] = str(child.returncode)
+            exit_code = str(child.returncode)
         except PermissionError:
             print(print_error(file_args[0], ": Permission denied"))
-            environ['EXITCODE'] = '2'
+            exit_code = 2
         except FileNotFoundError:
             print(print_error(file_args[0], ": No such file or directory"))
-            environ['EXITCODE'] = '127'
+            exit_code = 127
     else:
         try:
             # find all the possible paths
             PATH = environ['PATH'].split(':')
         except KeyError as e:
             print(print_error(file_args[0], ": command not found"))
-            environ['EXITCODE'] = '127'
+            exit_code = 127
             return e
         for item in PATH:
             if path.exists(item+'/'+file_args[0]):
                 child = run([item+'/'+file_args.pop(0)]+file_args)
-                environ['EXITCODE'] = str(child.returncode)
+                exit_code = str(child.returncode)
                 check = True
                 break
         if not check:  # if the command didn't run
             print(print_error(file_args[0], ": command not found"))
-            environ['EXITCODE'] = '127'
+            exit_code = 127
 
 
 def print_error(arg, _error, _cd=''):
@@ -154,7 +156,7 @@ def handle_input(_args):
         if element:
             # exit status
             if '$?' in element or '${?}' in element:
-                replace_things = get_exit_status(element)
+                replace_things = get_exit_status(element, str(exit_code))
             else:
                 type_in.append(element)
     if replace_things:
@@ -164,7 +166,7 @@ def handle_input(_args):
 
 def main():
     flag = True
-    environ['EXITCODE'] = '0'
+    exit_code = 0
     special_cases = ['! ', '!', '!=']
     history_lst = []
     functions = {
