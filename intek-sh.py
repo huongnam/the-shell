@@ -4,6 +4,8 @@ from subprocess import run
 from shlex import split
 from history import write_history_file, read_history_file, print_history
 from history import handle_command, handle_special_case
+from sys import exit
+from exit_status import get_exit_status
 
 
 '''
@@ -102,10 +104,14 @@ def sh_exit(exit_args):
     if check_args(exit_args):
         if exit_args[1].isdigit():
             print('exit ' + ' '.join(type_in[1:]))
+            exit_code = int(' '.join(exit_args[1:]))
         else:
             print('exit\nintek-sh: exit: ' + ' '.join(type_in[1:]))
+            exit_code = 0
     else:
         print('exit')
+        exit_code = 0
+    exit(exit_code)
 
 
 def run_file(file_args):
@@ -155,14 +161,17 @@ def process_function(functions, command, args):
 
 def handle_input(_args):
     type_in = []
+    replace_things = []
     _args = split(_args)
     for element in _args:
         if element:
-            if '$?' in element:
-                element = element.replace('$?', str(exit_code))
-                type_in.append(element)
+            # exit status
+            if '$?' in element or '${?}' in element:
+                replace_things = get_exit_status(element, str(exit_code))
             else:
                 type_in.append(element)
+    if replace_things:
+        type_in += replace_things
     return type_in
 
 
@@ -217,7 +226,7 @@ def main():
             elif pass_flag:
                 pass
 
-            type_in = handle_input(_args)
+            type_in = handle_input(args)
             if type_in:
                 command = type_in[0]
                 if command in functions.keys():
@@ -233,6 +242,7 @@ def main():
         except BaseException:
             print('intek-sh: muahahahahahahahaaaaaaa')
             continue
+
 
 if __name__ == '__main__':
     main()
