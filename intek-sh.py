@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 from os import chdir, environ, getcwd, path
-from subprocess import run
+from subprocess import run, Popen, PIPE
 from shlex import split
 from history import write_history_file, read_history_file, print_history
 from history import handle_command, handle_special_case
@@ -158,11 +158,16 @@ def handle_input(_args):
     _args = split(_args)
     for element in _args:
         if element:
-            if '$?' in element:
+            if element.startswith('`') and element.endswith('`'):
+                process = Popen(element.strip('`').split(), stdout=PIPE, stderr=PIPE)
+                stdout, stderr = process.communicate()
+                type_in.append(stdout.decode())
+            elif '$?' in element:
                 element = element.replace('$?', str(exit_code))
                 type_in.append(element)
             else:
                 type_in.append(element)
+    print(type_in)
     return type_in
 
 
@@ -193,46 +198,46 @@ def main():
             'history': print_history
             }
     while flag:
-        try:
-            written = False
-            _args = input('\033[92m\033[1mintek-sh$\033[0m ')
+        # try:
+        written = False
+        _args = input('\033[92m\033[1mintek-sh$\033[0m ')
 
-            # expand history_file
-            if not _args.startswith('!') and _args not in special_cases:
-                if '!#' not in _args and '^' not in _args:
-                    write_history_file(_args, curpath)
-                    written = True
+        # expand history_file
+        if not _args.startswith('!') and _args not in special_cases:
+            if '!#' not in _args and '^' not in _args:
+                write_history_file(_args, curpath)
+                written = True
 
-            # get args and check existence
-            args, exist = get_args(curpath, _args)
-            if not args and not exist:
-                continue
-            if not written and not args.startswith('!'):
-                write_history_file(args, curpath)
-
-            # when to continue or pass
-            continue_flag, pass_flag, args = handle_special_case(exist, args)
-            if continue_flag:
-                continue
-            elif pass_flag:
-                pass
-
-            type_in = handle_input(_args)
-            if type_in:
-                command = type_in[0]
-                if command in functions.keys():
-                    if 'history' in command:
-                        history_lst = read_history_file(curpath)
-                        flag = process_function(functions, command,
-                                                history_lst)
-                    else:
-                        flag, exit_code = process_function(functions, command,
-                                                           type_in)
-                else:
-                    exit_code = run_file(type_in)
-        except BaseException:
-            print('intek-sh: muahahahahahahahaaaaaaa')
+        # get args and check existence
+        args, exist = get_args(curpath, _args)
+        if not args and not exist:
             continue
+        if not written and not args.startswith('!'):
+            write_history_file(args, curpath)
+
+        # when to continue or pass
+        continue_flag, pass_flag, args = handle_special_case(exist, args)
+        if continue_flag:
+            continue
+        elif pass_flag:
+            pass
+
+        type_in = handle_input(_args)
+        if type_in:
+            command = type_in[0]
+            if command in functions.keys():
+                if 'history' in command:
+                    history_lst = read_history_file(curpath)
+                    flag = process_function(functions, command,
+                                            history_lst)
+                else:
+                    flag, exit_code = process_function(functions, command,
+                                                       type_in)
+            else:
+                exit_code = run_file(type_in)
+        # except BaseException:
+        #     print('intek-sh: muahahahahahahahaaaaaaa')
+        #     continue
 
 if __name__ == '__main__':
     main()
