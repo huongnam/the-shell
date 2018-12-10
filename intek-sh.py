@@ -104,7 +104,7 @@ def main():
                 else:
                     exit_code = run_file(type_in)
         except BaseException:
-            print('intek-sh: muahahahahahahahaaaaaaa')
+            print('intek-sh: sorry thing went wrong...')
             continue
 
 
