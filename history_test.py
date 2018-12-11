@@ -165,13 +165,10 @@ def main():
             }
     while flag:
         try:
-            written = False
+            hist_written = False
             _args = input('\033[92m\033[1mintek-sh$\033[0m ')
             # expand history_file
-            if not _args.startswith('!') and _args not in special_cases:
-                if '!#' not in _args and '^' not in _args:
-                    write_history_file(_args, curpath)
-                    written = True
+            hist_written = expand_history_file(_args, special_cases, curpath)
 
             # get args and check existence
             args, exist = get_args(curpath, _args)

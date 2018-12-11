@@ -1,4 +1,3 @@
-from os import path
 '''
 Event Designators
      An event designator is a reference to a command line entry in
@@ -28,6 +27,15 @@ def write_history_file(args, curpath):
     history_file = open(curpath + '/.intek-sh_history', 'a')
     history_file.write(args + '\n')
     history_file.close()
+
+
+def expand_history_file(_args, special_cases, curpath):
+    written = False
+    if not _args.startswith('!') and _args not in special_cases:
+        if '!#' not in _args and '^' not in _args:
+            write_history_file(_args, curpath)
+            written = True
+    return written
 
 
 def read_history_file(curpath):
