@@ -1,29 +1,3 @@
-from os import path
-'''
-Event Designators
-     An event designator is a reference to a command line entry in
-     the history list.  Unless the reference is absolute, events are rela‐
-     tive to the current position in the history list.
-
-     !      Start a history substitution, except when followed by a blank,
-            newline, = or (.
-     !n     Refer to command line n.
-     !-n    Refer to the current command minus n.
-     !!     Refer to the previous command.  This is a synonym for `!-1'.
-     !string
-            Refer to the most recent command preceding the current position
-            in the history list starting with string.
-     !?string[?]
-            Refer  to  the most recent command preceding the current position
-            in the history list containing string.  The trailing ? may
-            be omitted if string is followed immediately by a newline.
-     ^string1^string2^
-            Quick substitution.  Repeat the last command, replacing string1
-            with string2.  Equivalent to ``!!:s/string1/string2/''
-     !#     The entire command line typed so far.
-'''
-
-
 def write_history_file(args, curpath):
     history_file = open(curpath + '/.intek-sh_history', 'a')
     history_file.write(args + '\n')
@@ -35,6 +9,15 @@ def read_history_file(curpath):
     history_lst = history_file.readlines()
     history_file.close()
     return history_lst
+
+
+def expand_history_file(_args, special_cases, curpath):
+    written = False
+    if not _args.startswith('!') and _args not in special_cases:
+        if '!#' not in _args and '^' not in _args:
+            write_history_file(_args, curpath)
+            written = True
+    return written
 
 
 def print_history(history_lst):
@@ -56,34 +39,32 @@ def print_args(args, cmd):
 
 
 def handle_special_case(exist, args):
-    continue_flag = False
-    pass_flag = False
     if args.startswith('!'):
         # no matched event in history_lst
         if not exist:
             if sub_failed2:
-                continue_flag = True
+                raise ValueError
             else:
                 print('intek-sh: ' + args + ': event not found')
-                continue_flag = True
+                raise ValueError
         else:  # match event in history_lst but
             # command starts with ! and followed by a blank space
             if len(args) is 1 or args == '! ':
-                continue_flag = True
+                raise ValueError
             # command starts with '!=' -> command not found
             elif args[1] is '=':
-                pass_flag = True
+                raise Exception
             # command type: ! with multiple spaces and random string
             elif len(args) > 2:
                 args = args.strip('!').strip(' ')
-                pass_flag = True
+                raise Exception
     # substitution errors
     elif args.startswith('^') and sub_failed:
-        continue_flag = True
+        raise ValueError
     # out of capability
     elif alert:
-        continue_flag = True
-    return continue_flag, pass_flag, args
+        raise ValueError
+    return args
 
 
 def handle_emotion_prefix(args, history_lst):

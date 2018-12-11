@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 from shlex import split
 from history import write_history_file, read_history_file, print_history
-from history import handle_command, handle_special_case
+from history import handle_command, handle_special_case, expand_history_file
 from exit_status import get_exit_status
 from builtin import *
 
@@ -44,7 +44,7 @@ def get_args(curpath, _args):
         history_lst = read_history_file(curpath)
     else:
         print('intek-sh: there\'s nothing in the history list!')
-        return None, False
+        raise FileNotFoundError
     args, exist = handle_command(_args, history_lst)
     return args, exist
 
@@ -67,27 +67,26 @@ def main():
             }
     while flag:
         try:
-            written = False
+            hist_written = False
             _args = input('\033[92m\033[1mintek-sh$\033[0m ')
 
             # expand history_file
-            if not _args.startswith('!') and _args not in special_cases:
-                if '!#' not in _args and '^' not in _args:
-                    write_history_file(_args, curpath)
-                    written = True
+            hist_written = expand_history_file(_args, special_cases, curpath)
 
             # get args and check existence
-            args, exist = get_args(curpath, _args)
-            if not args and not exist:
+            try:
+                args, exist = get_args(curpath, _args)
+            except FileNotFoundError:
                 continue
-            if not written and not args.startswith('!'):
+            if not hist_written and not args.startswith('!'):
                 write_history_file(args, curpath)
 
             # when to continue or pass
-            continue_flag, pass_flag, args = handle_special_case(exist, args)
-            if continue_flag:
+            try:
+                args = handle_special_case(exist, args)
+            except ValueError:
                 continue
-            elif pass_flag:
+            except Exception:
                 pass
 
             type_in = handle_input(args, exit_code)
@@ -104,7 +103,7 @@ def main():
                 else:
                     exit_code = run_file(type_in)
         except BaseException:
-            print('intek-sh: sorry thing went wrong...')
+            print('intek-sh: muahahahahahahahahaha')
             continue
 
 
