@@ -1,5 +1,6 @@
 from namtestswiththisfile import dep
 
+#  returns a list seperated by the operator && or ||
 def split_operator(args, operator):
     args = args.split(sep=operator)
     return args
