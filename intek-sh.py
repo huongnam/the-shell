@@ -4,6 +4,7 @@ from history import write_history_file, read_history_file, print_history
 from history import handle_command, handle_special_case, expand_history_file
 from exit_status import get_exit_status
 from builtin import *
+from glob import glob
 from readline import parse_and_bind
 
 
@@ -27,7 +28,7 @@ def process_function(functions, command, args):
 def handle_input(_args, exit_code):
     type_in = []
     replace_things = []
-    _args = split(_args)
+    _args = _args.split()
     for element in _args:
         if element:
             # exit status
