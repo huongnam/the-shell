@@ -140,13 +140,11 @@ def handle_input(_args):
 
 
 def get_args(curpath, _args):
-    if path.exists(curpath + '/.intek-sh_history'):
-        history_lst = read_history_file(curpath)
-    else:
-        print('intek-sh: there\'s nothing in the history list!')
-        return None, False
-    args, exist = handle_command(_args, history_lst)
-    return args, exist
+    history_lst = read_history_file(curpath)
+    if history_lst:
+        args, exist = handle_command(_args, history_lst)
+        return args, exist
+    return None, False
 
 
 def main():
@@ -168,15 +166,21 @@ def main():
         hist_written = False
         _args = input('\033[92m\033[1mintek-sh$\033[0m ')
         # expand history_file
-        hist_written = expand_history_file(_args, special_cases, curpath)
+        history_lst = read_history_file(curpath)
+        hist_written = expand_history_file(_args, special_cases, curpath,
+                                           history_lst)
 
-        # get args and check existence
+        # get args and check existence of _args in history_lst
         args, exist = get_args(curpath, _args)
+        # if there is no command typed in so far
         if not args and not exist:
+            print('intek-sh: there\'s nothing in the history list')
             continue
-        if not hist_written and not args.startswith('!') and \
-            not args.startswith(' '):
-            write_history_file(args, curpath)
+        # check if the after args in history_lst
+        if not hist_written:
+            history_lst = read_history_file(curpath)
+            hist_written = expand_history_file(_args, special_cases, curpath,
+                                               history_lst)
 
         # when to continue
         continue_flag, args = handle_special_case(exist, args)

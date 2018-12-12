@@ -29,18 +29,27 @@ def write_history_file(args, curpath):
     history_file.close()
 
 
-def expand_history_file(_args, special_cases, curpath):
+def expand_history_file(_args, special_cases, curpath, history_lst):
     written = False
     if not _args.startswith('!') and _args not in special_cases and\
         not _args.startswith(' '):
-        if '!#' not in _args and '^' not in _args:
-            write_history_file(_args, curpath)
-            written = True
+        if history_lst:
+            if _args != history_lst[-1].strip('\n'):
+                if '!#' not in _args and '^' not in _args:
+                    write_history_file(_args, curpath)
+                    written = True
+        else:
+            if '!#' not in _args and '^' not in _args:
+                write_history_file(_args, curpath)
+                written = True
     return written
 
 
 def read_history_file(curpath):
-    history_file = open(curpath + '/.intek-sh_history', 'r')
+    try:
+        history_file = open(curpath + '/.intek-sh_history', 'r')
+    except FileNotFoundError:
+        return None
     history_lst = history_file.readlines()
     history_file.close()
     return history_lst
