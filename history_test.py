@@ -178,12 +178,10 @@ def main():
             not args.startswith(' '):
             write_history_file(args, curpath)
 
-        # when to continue or pass
-        continue_flag, pass_flag, args = handle_special_case(exist, args)
+        # when to continue
+        continue_flag, args = handle_special_case(exist, args)
         if continue_flag:
             continue
-        elif pass_flag:
-            pass
 
         type_in = handle_input(args)
         if type_in:

@@ -67,7 +67,6 @@ def print_args(args, cmd):
 
 def handle_special_case(exist, args):
     continue_flag = False
-    pass_flag = False
     if args.startswith('!'):
         # no matched event in history_lst
         if not exist:
@@ -80,20 +79,13 @@ def handle_special_case(exist, args):
             # command starts with ! and followed by a blank space
             if len(args) is 1 or args == '! ':
                 continue_flag = True
-            # command starts with '!=' -> command not found
-            elif args[1] is '=':
-                pass_flag = True
-            # command type: ! with multiple spaces and random string
-            elif len(args) > 2:
-                args = args.strip('!').strip(' ')
-                pass_flag = True
     # substitution errors
     elif args.startswith('^') and sub_failed:
         continue_flag = True
     # out of capability
     elif alert:
         continue_flag = True
-    return continue_flag, pass_flag, args
+    return continue_flag, args
 
 
 def handle_emotion_prefix(args, history_lst):
