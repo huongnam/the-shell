@@ -2,7 +2,7 @@
 from os import chdir, environ, getcwd, path
 from subprocess import run
 from history import write_history_file, read_history_file, print_history
-from history import handle_command, handle_special_case
+from history import handle_command, handle_special_case, expand_history_file
 
 
 '''
@@ -164,40 +164,41 @@ def main():
             'history': print_history
             }
     while flag:
-        try:
-            hist_written = False
-            _args = input('\033[92m\033[1mintek-sh$\033[0m ')
-            # expand history_file
-            hist_written = expand_history_file(_args, special_cases, curpath)
+        # try:
+        hist_written = False
+        _args = input('\033[92m\033[1mintek-sh$\033[0m ')
+        # expand history_file
+        hist_written = expand_history_file(_args, special_cases, curpath)
 
-            # get args and check existence
-            args, exist = get_args(curpath, _args)
-            if not args and not exist:
-                continue
-            if not written and not args.startswith('!'):
-                write_history_file(args, curpath)
-
-            # when to continue or pass
-            continue_flag, pass_flag, args = handle_special_case(exist, args)
-            if continue_flag:
-                continue
-            elif pass_flag:
-                pass
-
-            type_in = handle_input(args)
-            if type_in:
-                if type_in[0] in functions.keys():
-                    if 'history' in type_in[0]:
-                        history_lst = read_history_file(curpath)
-                        flag = process_function(functions, type_in[0],
-                                                history_lst)
-                    else:
-                        flag = process_function(functions, type_in[0], type_in)
-                else:
-                    run_file(type_in)
-        except BaseException:
-            print('\nintek-sh: something went wrong...')
+        # get args and check existence
+        args, exist = get_args(curpath, _args)
+        if not args and not exist:
             continue
+        if not hist_written and not args.startswith('!') and \
+            not args.startswith(' '):
+            write_history_file(args, curpath)
+
+        # when to continue or pass
+        continue_flag, pass_flag, args = handle_special_case(exist, args)
+        if continue_flag:
+            continue
+        elif pass_flag:
+            pass
+
+        type_in = handle_input(args)
+        if type_in:
+            if type_in[0] in functions.keys():
+                if 'history' in type_in[0]:
+                    history_lst = read_history_file(curpath)
+                    flag = process_function(functions, type_in[0],
+                                            history_lst)
+                else:
+                    flag = process_function(functions, type_in[0], type_in)
+            else:
+                run_file(type_in)
+        # except BaseException:
+        #     print('\nintek-sh: something went wrong...')
+        #     continue
 
 
 if __name__ == '__main__':

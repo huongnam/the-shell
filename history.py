@@ -31,7 +31,8 @@ def write_history_file(args, curpath):
 
 def expand_history_file(_args, special_cases, curpath):
     written = False
-    if not _args.startswith('!') and _args not in special_cases:
+    if not _args.startswith('!') and _args not in special_cases and\
+        not _args.startswith(' '):
         if '!#' not in _args and '^' not in _args:
             write_history_file(_args, curpath)
             written = True
@@ -54,6 +55,7 @@ def print_history(history_lst):
         # left justify the commands
         command = element.ljust(len(max(history_lst, key=len)), ' ')
         print(' ' * 4 + _order + '  ' + command)
+    return 0
 
 
 # replace args as cmd and print it
