@@ -5,7 +5,9 @@ from history import handle_command, handle_special_case, expand_history_file
 from exit_status import get_exit_status
 from builtin import *
 from glob import glob
-from readline import parse_and_bind
+from readline import parse_and_bind, set_completer, set_completer_delims
+from readline import read_history_file
+from dynamic import make_subcommand_completer
 
 
 '''
@@ -43,7 +45,7 @@ def handle_input(_args, exit_code):
 
 def get_args(curpath, _args):
     if path.exists(curpath + '/.intek-sh_history'):
-        history_lst = read_history_file(curpath)
+        history_lst = read_history_file(curpath + '/.intek-sh_history')
     else:
         print('intek-sh: there\'s nothing in the history list!')
         raise FileNotFoundError
@@ -59,6 +61,15 @@ def main():
     curpath = environ['PWD']
     special_cases = ['! ', '!', '!=']
     history_lst = []
+    commands = {
+        'ls': {},
+        'history': {},
+        'cd': {},
+        'printenv': {},
+        'export': {},
+        'unset': {},
+        'exit': {},
+        }
     functions = {
             'cd': cd,
             'printenv': printenv,
@@ -70,7 +81,14 @@ def main():
     while flag:
         # try:
         hist_written = False
+        histfile = curpath + '/.intek-sh_history'
         parse_and_bind('tab: complete')
+        set_completer(make_subcommand_completer(commands))
+        set_completer_delims(" \t\n\"\\'`@$><=;|&{(")
+        try:
+            read_history_file(histfile)
+        except FileNotFoundError:
+            pass
         _args = input('\033[92m\033[1mintek-sh$\033[0m ')
 
         # expand history_file
@@ -97,7 +115,7 @@ def main():
             command = type_in[0]
             if command in functions.keys():
                 if 'history' in command:
-                    history_lst = read_history_file(curpath)
+                    history_lst = read_history_file(curpath + '/.intek-sh_history')
                     flag = process_function(functions, command,
                                             history_lst)
                 else:
