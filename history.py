@@ -32,7 +32,7 @@ def write_history_file(args, curpath):
 def expand_history_file(_args, special_cases, curpath, history_lst):
     written = False
     if not _args.startswith('!') and _args not in special_cases and\
-        not _args.startswith(' '):
+            not _args.startswith(' '):
         if history_lst:
             if _args != history_lst[-1].strip('\n'):
                 if '!#' not in _args and '^' not in _args:
@@ -55,16 +55,48 @@ def read_history_file(curpath):
     return history_lst
 
 
-def print_history(history_lst):
-    for index, element in enumerate(history_lst):
+def raw_print(no, lst, to):
+    ''' to: from `to` to the end of the list
+        no: number of the line'''
+    for index, element in enumerate(lst[to:]):
         # justify columns
         element = element.strip('\n')
         # right justify the numbers
-        _order = str(index+1).rjust(len(str(len(history_lst))), ' ')
+        _order = str(no + index+1).rjust(len(str(len(lst))), ' ')
         # left justify the commands
-        command = element.ljust(len(max(history_lst, key=len)), ' ')
+        command = element.ljust(len(max(lst, key=len)), ' ')
         print(' ' * 4 + _order + '  ' + command)
-    return 0
+
+
+def print_history(type_in, history_lst):
+    if len(type_in) == 1:
+        ''' command: history '''
+        raw_print(0, history_lst, 0)
+        return 0
+
+    elif len(type_in) == 2:
+        ''' command: history randomstring '''
+        if type_in[-1].isdigit():
+            # if randomstring is numeric
+            num = int(type_in[-1])
+            if num < len(history_lst):
+                # if the number is less than length of the list
+                raw_print((len(history_lst) - num),
+                          history_lst, (len(history_lst) - num))
+            else:
+                # if the number is less than length of the list
+                raw_print(0, history_lst, 0)
+            return 0
+        else:
+            # if randomstring is anything else
+            print('intek-sh: history: {}: numeric argument required'.format(
+                  type_in[-1]))
+            return 1
+
+    elif len(type_in) > 2:
+        ''' command: history randomstring randomstring ... '''
+        print('intek-sh: history: too many arguments')
+        return 148
 
 
 # replace args as cmd and print it

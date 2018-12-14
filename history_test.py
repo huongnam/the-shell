@@ -159,7 +159,7 @@ def main():
             'export': export,
             'unset': unset,
             'exit': sh_exit,
-            'history': print_history
+            'history': '_'
             }
     while flag:
         # try:
@@ -192,8 +192,8 @@ def main():
             if type_in[0] in functions.keys():
                 if 'history' in type_in[0]:
                     history_lst = read_history_file(curpath)
-                    flag = process_function(functions, type_in[0],
-                                            history_lst)
+                    print_history(type_in, history_lst)
+                    flag = True
                 else:
                     flag = process_function(functions, type_in[0], type_in)
             else:
