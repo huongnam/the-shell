@@ -62,7 +62,7 @@ def main():
     curpath = environ['PWD']
     special_cases = ['! ', '!', '!=']
     history_lst = []
-    commands = {'ls', 'history', 'cd', 'printenv', 'export', 'unset', 'exit'}
+    commands = {'history', 'cd', 'printenv', 'export', 'unset', 'exit'}
     for cmd_path in environ['PATH'].split(':'):
         try:
             cmds = listdir(cmd_path)

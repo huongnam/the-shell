@@ -17,12 +17,12 @@ def make_subcommand_completer(commands):
             the buffer, it means we're already completing the next part. '''
             parts.append('')
 
-        if len(parts) == 0:
+        if len(parts) is 0:
             ''' do nothing when the user doesn't enter anything '''
             matches.append(None)
             return matches[state]
 
-        if len(parts) <= 1:
+        if len(parts) is 1:
             for key in commands:
                 if key.startswith(text):
                     matches.append(key + ' ')
