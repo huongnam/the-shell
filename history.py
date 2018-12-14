@@ -1,23 +1,58 @@
+'''
+Event Designators
+     An event designator is a reference to a command line entry in
+     the history list.  Unless the reference is absolute, events are rela‐
+     tive to the current position in the history list.
+
+     !      Start a history substitution, except when followed by a blank,
+            newline, = or (.
+     !n     Refer to command line n.
+     !-n    Refer to the current command minus n.
+     !!     Refer to the previous command.  This is a synonym for `!-1'.
+     !string
+            Refer to the most recent command preceding the current position
+            in the history list starting with string.
+     !?string[?]
+            Refer  to  the most recent command preceding the current position
+            in the history list containing string.  The trailing ? may
+            be omitted if string is followed immediately by a newline.
+     ^string1^string2^
+            Quick substitution.  Repeat the last command, replacing string1
+            with string2.  Equivalent to ``!!:s/string1/string2/''
+     !#     The entire command line typed so far.
+'''
+
+
 def write_history_file(args, curpath):
     history_file = open(curpath + '/.intek-sh_history', 'a')
     history_file.write(args + '\n')
     history_file.close()
 
 
+def expand_history_file(_args, special_cases, curpath, history_lst):
+    written = False
+    if not _args.startswith('!') and _args not in special_cases and\
+        not _args.startswith(' '):
+        if history_lst:
+            if _args != history_lst[-1].strip('\n'):
+                if '!#' not in _args and '^' not in _args:
+                    write_history_file(_args, curpath)
+                    written = True
+        else:
+            if '!#' not in _args and '^' not in _args:
+                write_history_file(_args, curpath)
+                written = True
+    return written
+
+
 def read_history_file(curpath):
-    history_file = open(curpath + '/.intek-sh_history', 'r')
+    try:
+        history_file = open(curpath + '/.intek-sh_history', 'r')
+    except FileNotFoundError:
+        return None
     history_lst = history_file.readlines()
     history_file.close()
     return history_lst
-
-
-def expand_history_file(_args, special_cases, curpath):
-    written = False
-    if not _args.startswith('!') and _args not in special_cases:
-        if '!#' not in _args and '^' not in _args:
-            write_history_file(_args, curpath)
-            written = True
-    return written
 
 
 def print_history(history_lst):
@@ -29,6 +64,7 @@ def print_history(history_lst):
         # left justify the commands
         command = element.ljust(len(max(history_lst, key=len)), ' ')
         print(' ' * 4 + _order + '  ' + command)
+    return 0
 
 
 # replace args as cmd and print it
@@ -39,32 +75,26 @@ def print_args(args, cmd):
 
 
 def handle_special_case(exist, args):
+    continue_flag = False
     if args.startswith('!'):
         # no matched event in history_lst
         if not exist:
             if sub_failed2:
-                raise ValueError
+                continue_flag = True
             else:
                 print('intek-sh: ' + args + ': event not found')
-                raise ValueError
+                continue_flag = True
         else:  # match event in history_lst but
             # command starts with ! and followed by a blank space
             if len(args) is 1 or args == '! ':
-                raise ValueError
-            # command starts with '!=' -> command not found
-            elif args[1] is '=':
-                raise Exception
-            # command type: ! with multiple spaces and random string
-            elif len(args) > 2:
-                args = args.strip('!').strip(' ')
-                raise Exception
+                continue_flag = True
     # substitution errors
     elif args.startswith('^') and sub_failed:
-        raise ValueError
+        continue_flag = True
     # out of capability
     elif alert:
-        raise ValueError
-    return args
+        continue_flag = True
+    return continue_flag, args
 
 
 def handle_emotion_prefix(args, history_lst):

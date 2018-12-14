@@ -18,11 +18,12 @@ def make_subcommand_completer(commands):
             parts.append('')
 
         if len(parts) == 0:
+            ''' do nothing when the user doesn't enter anything '''
             matches.append(None)
             return matches[state]
 
         if len(parts) <= 1:
-            for key in commands.keys():
+            for key in commands:
                 if key.startswith(text):
                     matches.append(key + ' ')
             matches.append(None)
