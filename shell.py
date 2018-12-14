@@ -1,14 +1,18 @@
 #!/usr/bin/env python3
-from shlex import split
 from history import write_history_file, read_history_file, print_history
 from history import handle_command, handle_special_case, expand_history_file
 from exit_status import get_exit_status
-from builtin import *
 from glob import glob
 from readline import parse_and_bind, set_completer, set_completer_delims
 from readline import read_history_file as rdline_read
 from dynamic import make_subcommand_completer
-from os import listdir
+from os import listdir, environ, path
+import builtins_test.process_cd
+import builtins_test.process_exit
+import builtins_test.process_export
+import builtins_test.process_printenv
+import builtins_test.process_run_file
+import builtins_test.process_unset
 
 
 '''
@@ -71,11 +75,11 @@ def main():
         for cmd in cmds:
             commands.add(cmd)
     functions = {
-            'cd': cd,
-            'printenv': printenv,
-            'export': export,
-            'unset': unset,
-            'exit': sh_exit,
+            'cd': builtins_test.process_cd.cd,
+            'printenv': builtins_test.process_printenv.printenv,
+            'export': builtins_test.process_export.export,
+            'unset': builtins_test.process_unset.unset,
+            'exit': builtins_test.process_exit.sh_exit,
             'history': print_history
             }
     while flag:
@@ -125,7 +129,7 @@ def main():
                     flag, exit_code = process_function(functions, command,
                                                        type_in)
             else:
-                exit_code = run_file(type_in)
+                exit_code = builtins_test.process_run_file.run_file(type_in)
         # except BaseException:
         #     print('intek-sh: muahahahahahahahahaha')
         #     continue

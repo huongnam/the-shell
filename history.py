@@ -32,7 +32,7 @@ def write_history_file(args, curpath):
 def expand_history_file(_args, special_cases, curpath, history_lst):
     written = False
     if not _args.startswith('!') and _args not in special_cases and\
-        not _args.startswith(' '):
+            not _args.startswith(' '):
         if history_lst:
             if _args != history_lst[-1].strip('\n'):
                 if '!#' not in _args and '^' not in _args:

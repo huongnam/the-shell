@@ -16,6 +16,7 @@ def list_dir_for_cd(text):
 
 
 def list_dir_for_anythingElse(text):
+    ''' from_to: in case `./` or `../` in command -> strip them'''
     anythingElse_matches = []
     for filename in glob(text + '*'):
         if path.isdir(filename):
@@ -54,6 +55,17 @@ def make_subcommand_completer(commands):
         elif len(parts) is 1:
             ''' If the completion happens on the first word,
                 commands are suggested'''
+            command = parts[0]
+            if '/' in command:
+                ''' list all files and folders in '.' directory '''
+                matches = list_dir_for_anythingElse(text)
+                # matches.append(None)
+                if len(matches) > 1:
+                    ''' if there is more than 1 result matched '''
+                    return matches[state][text.rfind('/')+1:]
+                elif len(matches) == 1:
+                    ''' just 1 result matched '''
+                    return matches[state]
             for key in commands:
                 if key.startswith(text):
                     matches.append(key + ' ')
