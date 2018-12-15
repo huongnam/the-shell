@@ -89,9 +89,14 @@ def main():
             }
     while flag:
         # try:ls
+        shell_name = '\033[92m\033[1mintek-sh:\033[0m'
+        if 'HOME' in environ.keys():
+          home = '\033[1m\033[34m' + environ['PWD'].replace(environ['HOME'], '~') + '\033[0m'
+        else:
+          home = '\033[1m\033[34m' + environ['PWD'] + '\033[0m'
         hist_written = False
         parse_and_bind('tab: complete')
-        _args = input('\033[92m\033[1mintek-sh$\033[0m ')
+        _args = input(shell_name + home + '$ ')
 
         # expand history_file
         hist_written = expand_history_file(_args, special_cases, curpath)
@@ -117,6 +122,7 @@ def main():
         for i in range(len(args)):
             if args[i] in indicators:
                 handle_pipe(args)
+                break
         else:
             # print(2)
             dep(args, functions)
