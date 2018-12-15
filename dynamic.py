@@ -15,21 +15,20 @@ def list_dir_for_cd(text):
     return cd_matches
 
 
-def list_dir_for_anythingElse(text):
-    ''' from_to: in case `./` or `../` in command -> strip them'''
-    anythingElse_matches = []
+def list_dir_for_anythingelse(text):
+    anythingelse_matches = []
     for filename in glob(text + '*'):
         if path.isdir(filename):
-            anythingElse_matches.append(filename + '/ ')
+            anythingelse_matches.append(filename + '/ ')
         else:
-            anythingElse_matches.append(filename + ' ')
+            anythingelse_matches.append(filename + ' ')
     # including hidden files and folders
     for hidden_filename in glob(text + '.*'):
         if path.isdir(hidden_filename):
-            anythingElse_matches.append(hidden_filename + '/ ')
+            anythingelse_matches.append(hidden_filename + '/ ')
         else:
-            anythingElse_matches.append(hidden_filename + ' ')
-    return anythingElse_matches
+            anythingelse_matches.append(hidden_filename + ' ')
+    return anythingelse_matches
 
 
 def make_subcommand_completer(commands):
@@ -58,17 +57,14 @@ def make_subcommand_completer(commands):
             command = parts[0]
             if '/' in command or '*' in command:
                 ''' list all files and folders in '.' directory '''
-                matches = list_dir_for_anythingElse(text)
+                matches = list_dir_for_anythingelse(text)
                 matches.append(None)
-                # matches.append(None)
                 if len(matches) > 2:
-                  # print(matches)
-                  ''' if there is more than 1 result matched '''
-                  return matches[state]
+                    ''' if there is more than 1 result matched '''
+                    return matches[state]
                 elif len(matches) == 2:
-                  # print(matches)
-                  ''' just 1 result matched '''
-                  return matches[state]
+                    ''' just 1 result matched '''
+                    return matches[state]
             for key in commands:
                 if key.startswith(text):
                     matches.append(key + ' ')
@@ -87,7 +83,7 @@ def make_subcommand_completer(commands):
             else:
                 ''' Treat 'file' specially, by looking for matching files
                 in the current directory.'''
-                matches = list_dir_for_anythingElse(text)
+                matches = list_dir_for_anythingelse(text)
                 matches.append(None)
                 return matches[state]
     return custom_complete
