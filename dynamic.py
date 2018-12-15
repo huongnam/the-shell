@@ -56,16 +56,19 @@ def make_subcommand_completer(commands):
             ''' If the completion happens on the first word,
                 commands are suggested'''
             command = parts[0]
-            if '/' in command:
+            if '/' in command or '*' in command:
                 ''' list all files and folders in '.' directory '''
                 matches = list_dir_for_anythingElse(text)
+                matches.append(None)
                 # matches.append(None)
-                if len(matches) > 1:
-                    ''' if there is more than 1 result matched '''
-                    return matches[state][text.rfind('/')+1:]
-                elif len(matches) == 1:
-                    ''' just 1 result matched '''
-                    return matches[state]
+                if len(matches) > 2:
+                  # print(matches)
+                  ''' if there is more than 1 result matched '''
+                  return matches[state]
+                elif len(matches) == 2:
+                  # print(matches)
+                  ''' just 1 result matched '''
+                  return matches[state]
             for key in commands:
                 if key.startswith(text):
                     matches.append(key + ' ')
@@ -80,11 +83,11 @@ def make_subcommand_completer(commands):
                 ''' just list the present directories if command is cd '''
                 matches = list_dir_for_cd(text)
                 matches.append(None)
-
+                return matches[state]
             else:
                 ''' Treat 'file' specially, by looking for matching files
                 in the current directory.'''
                 matches = list_dir_for_anythingElse(text)
                 matches.append(None)
-            return matches[state]
+                return matches[state]
     return custom_complete
