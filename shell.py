@@ -13,6 +13,7 @@ unset   : remove each variable or function name
 exit    : end process
 '''
 
+
 def handle_interrupt(signum, frame):
     ''' KeyboardInterrupt's exit_code: 130'''
     global exit_code
@@ -28,7 +29,7 @@ def process_function(functions, command, args):
         return True, exit_code
 
 
-def handle_input(_args, exit_code):
+def handle_input(_args):
     type_in = []
     replace_things = []
     _args = _args.split()
@@ -60,7 +61,7 @@ def main():
             ''' Ctrl + C '''
             signal(SIGINT, handle_interrupt)
 
-            ''' Ctrl + \ '''
+            ''' Ctrl + "\" '''
             signal(SIGQUIT, SIG_IGN)
 
             ''' the signal that is sent by default by the kill, pkill,
@@ -72,7 +73,7 @@ def main():
 
             _args = input('\033[92m\033[1mintek-sh$\033[0m ')
 
-            type_in = handle_input(_args, exit_code)
+            type_in = handle_input(_args)
             if type_in:
                 command = type_in[0]
                 if command in functions.keys():
