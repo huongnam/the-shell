@@ -35,7 +35,10 @@ def handle_input(_args, exit_code):
             # globbing
             elif '*' in element or '?' in element or '[' in element:
                 new_element = do_globbing(element)
-                type_in += new_element
+                if not new_element:
+                    type_in.append(element)
+                else:
+                    type_in += new_element
             else:
                 type_in.append(element)
     if replace_things:
