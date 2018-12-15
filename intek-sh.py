@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-from shlex import split
 from history import write_history_file, read_history_file, print_history
 from history import handle_command, handle_special_case, expand_history_file
 from exit_status import get_exit_status
 from builtin import *
+from globbing import do_globbing
 
 
 '''
@@ -26,12 +26,16 @@ def process_function(functions, command, args):
 def handle_input(_args, exit_code):
     type_in = []
     replace_things = []
-    _args = split(_args)
+    _args = _args.split()
     for element in _args:
         if element:
             # exit status
             if '$?' in element or '${?}' in element:
                 replace_things = get_exit_status(element, str(exit_code))
+            # globbing
+            elif '*' in element or '?' in element or '[' in element:
+                new_element = do_globbing(element)
+                type_in += new_element
             else:
                 type_in.append(element)
     if replace_things:
@@ -66,45 +70,51 @@ def main():
             'history': print_history
             }
     while flag:
+        # try:
+        shell_name = '\033[92m\033[1mintek-sh:\033[0m'
+        if 'HOME' in environ.keys():
+          home = '\033[1m\033[34m' + environ['PWD'].replace(environ['HOME'], '~') + '\033[0m'
+        else:
+          home = '\033[1m\033[34m' + environ['PWD'] + '\033[0m'
+
+        hist_written = False
+        _args = input(shell_name + home + '$ ')
+
+        # expand history_file
+        hist_written = expand_history_file(_args, special_cases, curpath)
+
+        # get args and check existence
         try:
-            hist_written = False
-            _args = input('\033[92m\033[1mintek-sh$\033[0m ')
-
-            # expand history_file
-            hist_written = expand_history_file(_args, special_cases, curpath)
-
-            # get args and check existence
-            try:
-                args, exist = get_args(curpath, _args)
-            except FileNotFoundError:
-                continue
-            if not hist_written and not args.startswith('!'):
-                write_history_file(args, curpath)
-
-            # when to continue or pass
-            try:
-                args = handle_special_case(exist, args)
-            except ValueError:
-                continue
-            except Exception:
-                pass
-
-            type_in = handle_input(args, exit_code)
-            if type_in:
-                command = type_in[0]
-                if command in functions.keys():
-                    if 'history' in command:
-                        history_lst = read_history_file(curpath)
-                        flag = process_function(functions, command,
-                                                history_lst)
-                    else:
-                        flag, exit_code = process_function(functions, command,
-                                                           type_in)
-                else:
-                    exit_code = run_file(type_in)
-        except BaseException:
-            print('intek-sh: muahahahahahahahahaha')
+            args, exist = get_args(curpath, _args)
+        except FileNotFoundError:
             continue
+        if not hist_written and not args.startswith('!'):
+            write_history_file(args, curpath)
+
+        # when to continue or pass
+        try:
+            args = handle_special_case(exist, args)
+        except ValueError:
+            continue
+        except Exception:
+            pass
+
+        type_in = handle_input(args, exit_code)
+        if type_in:
+            command = type_in[0]
+            if command in functions.keys():
+                if 'history' in command:
+                    history_lst = read_history_file(curpath)
+                    flag = process_function(functions, command,
+                                            history_lst)
+                else:
+                    flag, exit_code = process_function(functions, command,
+                                                       type_in)
+            else:
+                exit_code = run_file(type_in)
+        # except BaseException:
+        #     print('intek-sh: muahahahahahahahahaha')
+        #     continue
 
 
 if __name__ == '__main__':
