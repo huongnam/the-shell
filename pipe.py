@@ -32,22 +32,27 @@ def redirect_err(file, mode):
     return False
 
 def handle_redirection(command, _input, flag):
-    indicators = [">", ">>", "<", "<<", "2>"]
+    indicators = [">", ">>", "<", "<<", "2>", "2>>"]
     lst_file = []
+
     commands_to_do = []
     for i in range(len(command)):
         if command[i] in indicators:
             file_name = command[i+1]
-            if command[i] is ">":
-                redirect_out(file_name, "w")
-            elif command[i] is ">>":
+
+            if command[i] == ">":
+                flag = redirect_out(file_name, "w")
+                print(flag)
+            elif command[i] == ">>":
+
                 redirect_out(file_name, "a")
-            elif command[i] is "<":
+            elif command[i] == "<":
                 _input = redirect_in(file_name)
-            elif command[i] is "<<":
+            elif command[i] == "<<":
                 str = ""
                 print("gra")
-                while True:
+                loop = True
+                while loop:
                     line_in = input("> ")
                     if line_in == file_name:
                         break
@@ -57,11 +62,17 @@ def handle_redirection(command, _input, flag):
             elif command[i] == "2>":
                 redirect_err(file_name, "w")
             elif command[i] == "2>>":
-                redirect_err(file_name, "r")
+                redirect_err(file_name, "a")
+            else:
+                print("chac la zo day")
             lst_file.append(file_name)
+            print(lst_file)
+            print("111" + file_name + "222")
+
     for item in command:
         if item not in lst_file and item not in indicators:
             commands_to_do.append(item)
+    print(commands_to_do)
     if flag is True:
         sub.run(commands_to_do, stdout=sys.stdout, input=_input, stderr=sys.stderr)
         return None
@@ -77,9 +88,9 @@ def handle_pipe(args):
         # item.strip()
         item = item.split()
         for i in range(len(item)):
-            if item[i] is ">":
-                print(item)
-                print("ho")
+            if item[i] == ">":
+                # print(item)
+                # print("ho")
                 new_file = open(item[i+1], "w")
     for i in range(len(commands)):
         # cho nay can globbing, path exansion nua

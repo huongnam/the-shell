@@ -7,6 +7,7 @@ from builtin import *
 from readline import parse_and_bind
 from logical_operator import *
 from pipe import *
+from ha import command_substitution
 '''
 cd      : change directory
 printenv: print all or part of environment
@@ -118,11 +119,13 @@ def main():
         if "&&" in args or "||" in args:
             # print(1)
             handle_logical_operator(args, functions)
-        indicators = [">", ">>", "<", "<<", "2>", "|"]
+        indicators = [">", ">>", "<", "<<", "2>", "2>>", "|"]
         for i in range(len(args)):
             if args[i] in indicators:
                 handle_pipe(args)
                 break
+        # if "`" in args:
+        #     command_substitution()
         else:
             # print(2)
             dep(args, functions)
