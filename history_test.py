@@ -36,11 +36,6 @@ def cd(cd_args):
     if _path:
         if _path is '..':
             change_dir('..')
-        elif _path is '~':
-            if 'HOME' in environ:
-                change_dir(environ['HOME'])
-            else:
-                change_dir(environ['XAUTHORITY'].strip('.Xauthority'))
         else:
             try:
                 change_dir(path.abspath(_path))
@@ -162,7 +157,6 @@ def main():
             'history': '_'
             }
     while flag:
-        # try:
         hist_written = False
         _args = input('\033[92m\033[1mintek-sh$\033[0m ')
         # expand history_file
@@ -198,9 +192,6 @@ def main():
                     flag = process_function(functions, type_in[0], type_in)
             else:
                 run_file(type_in)
-        # except BaseException:
-        #     print('\nintek-sh: something went wrong...')
-        #     continue
 
 
 if __name__ == '__main__':

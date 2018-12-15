@@ -29,19 +29,25 @@ def write_history_file(args, curpath):
     history_file.close()
 
 
+def check_and_write_history_file(args, curpath):
+    written = False
+    if '!#' not in args and '^' not in args:
+        write_history_file(args, curpath)
+        written = True
+    return written
+
+
 def expand_history_file(_args, special_cases, curpath, history_lst):
     written = False
     if not _args.startswith('!') and _args not in special_cases and\
             not _args.startswith(' '):
         if history_lst:
+            """ if the current command is different from the previous
+            one in history list """
             if _args != history_lst[-1].strip('\n'):
-                if '!#' not in _args and '^' not in _args:
-                    write_history_file(_args, curpath)
-                    written = True
+                written = check_and_write_history_file(_args, curpath)
         else:
-            if '!#' not in _args and '^' not in _args:
-                write_history_file(_args, curpath)
-                written = True
+            written = check_and_write_history_file(_args, curpath)
     return written
 
 
