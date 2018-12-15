@@ -14,6 +14,7 @@ exit    : end process
 '''
 
 def handle_interrupt(signum, frame):
+    ''' KeyboardInterrupt's exit_code: 130'''
     global exit_code
     exit_code = 130
     raise KeyboardInterrupt
@@ -46,7 +47,6 @@ def handle_input(_args, exit_code):
 def main():
     global type_in
     global exit_code
-    # exit_code = 0
     flag = True
     functions = {
             'cd': cd,
@@ -54,19 +54,25 @@ def main():
             'export': export,
             'unset': unset,
             'exit': sh_exit,
-            'history': print_history
             }
     try:
         while flag:
+            ''' Ctrl + C '''
             signal(SIGINT, handle_interrupt)
+
+            ''' Ctrl + \ '''
             signal(SIGQUIT, SIG_IGN)
+
+            ''' the signal that is sent by default by the kill, pkill,
+            killall, fuser -k... commands'''
             signal(SIGTERM, SIG_IGN)
+
+            ''' Ctrl + Z '''
             signal(SIGTSTP, SIG_IGN)
-            
-            hist_written = False
+
             _args = input('\033[92m\033[1mintek-sh$\033[0m ')
 
-            type_in = handle_input(args, exit_code)
+            type_in = handle_input(_args, exit_code)
             if type_in:
                 command = type_in[0]
                 if command in functions.keys():
