@@ -34,5 +34,3 @@ def do_globbing(pattern):
                 pattern[dot_asterisk_idxs[i]] = case[i]
                 result.update(glob(''.join(pattern)))
     return list(result)
-
-print(do_globbing('.?*/.*'))
