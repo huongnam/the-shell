@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 from history import write_history_file, read_history_file, print_history
 from history import handle_command, handle_special_case, expand_history_file
-from exit_status import get_exit_status
 from dynamic import make_subcommand_completer
 from readline import parse_and_bind, set_completer, set_completer_delims
 from os import environ, listdir, path
 from signal import signal, SIGINT, SIGTERM, SIGQUIT, SIG_IGN, SIGTSTP
 from sys import exit
+from input_excuting import input_excuting
+from logical_operator import handle_logical_operator
 from builtins_package.process_cd import cd
 from builtins_package.process_exit import sh_exit
 from builtins_package.process_export import export
@@ -29,30 +30,6 @@ def handle_interrupt(signum, frame):
     global exit_code
     exit_code = 130
     raise KeyboardInterrupt
-
-
-def process_function(functions, command, args):
-    exit_code = functions[command](args)
-    if 'exit' in command:
-        return False, exit_code
-    else:
-        return True, exit_code
-
-
-def handle_input(_args, exit_code):
-    type_in = []
-    replace_things = []
-    _args = _args.split()
-    for element in _args:
-        if element:
-            # exit status
-            if '$?' in element or '${?}' in element:
-                replace_things = get_exit_status(element, str(exit_code))
-            else:
-                type_in.append(element)
-    if replace_things:
-        type_in += replace_things
-    return type_in
 
 
 def get_args(curpath, _args):
@@ -149,19 +126,11 @@ def main():
             if continue_flag:
                 continue
 
-            type_in = handle_input(args, exit_code)
-            if type_in:
-                command = type_in[0]
-                if command in functions.keys():
-                    if 'history' in type_in[0]:
-                        history_lst = read_history_file(curpath)
-                        exit_code = print_history(type_in, history_lst)
-                        flag = True
-                    else:
-                        flag, exit_code = process_function(functions, command,
-                                                           type_in)
-                else:
-                    exit_code = run_file(type_in)
+            if "&&" in args or "||" in args:
+                flag, exit_code = handle_logical_operator(args, functions)
+            else:
+                flag, exit_code = input_excuting(args, functions)
+
     except KeyboardInterrupt:
         print('^C')
         main()
