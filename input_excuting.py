@@ -1,6 +1,8 @@
 from history import read_history_file
 from builtins_package.process_run_file import run_file
 from exit_status import get_exit_status
+from globbing import do_globbing
+from path_expansions import path_expansions
 
 
 def process_function(functions, command, args):
@@ -20,6 +22,13 @@ def handle_input(_args, exit_code):
             # exit status
             if '$?' in element or '${?}' in element:
                 replace_things = get_exit_status(element, str(exit_code))
+            # globbing
+            elif '*' in element or '?' in element or '[' in element:
+                type_in += do_globbing(element)
+            # path expansions
+            elif '~' in element or '$' in element:
+                new_element = path_expansions(element)
+                type_in.append(new_element)
             else:
                 type_in.append(element)
     if replace_things:

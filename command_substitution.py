@@ -1,6 +1,7 @@
 from input_excuting import input_excuting
 import subprocess as sub
 
+
 def get_what_inside_the_backquotes(string):
     lst_command = []
     count = 0
