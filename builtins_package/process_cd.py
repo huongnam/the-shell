@@ -7,6 +7,7 @@ def print_error(arg, _error, _cd=''):
 
 # change the path and set environ PWD as the path
 def change_dir(dir_path):
+    environ['OLDPWD'] = getcwd()
     chdir(dir_path)
     environ['PWD'] = getcwd()
 
@@ -28,6 +29,14 @@ def cd(cd_args):
         if _path is '..':
             change_dir('..')
             exit_code = 0
+        # change to the previous directory
+        elif _path is '-':
+            if 'OLDPWD' in environ.keys():
+              change_dir(environ['OLDPWD'])
+              exit_code = 0
+            else:
+              print('intek-sh: cd: OLDPWD not set')
+              exit_code = 1
         else:
             try:
                 change_dir(path.abspath(_path))

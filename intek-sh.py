@@ -96,6 +96,14 @@ def main():
             }
     try:
         while flag:
+            '''make some color'''
+            shell_name = '\033[92m\033[1mintek-sh:\033[0m'
+            if 'HOME' in environ.keys():
+              home = '\033[1m\033[34m' +\
+                      environ['PWD'].replace(environ['HOME'], '~') + '\033[0m'
+            else:
+              home = '\033[1m\033[34m' + environ['PWD'] + '\033[0m'
+
             ''' Ctrl + C '''
             signal(SIGINT, handle_interrupt)
 
@@ -117,7 +125,7 @@ def main():
             set_completer_delims(" \t")
 
             hist_written = False
-            _args = input('\033[92m\033[1mintek-sh$\033[0m ')
+            _args = input(shell_name + home + '$ ')
 
             # expand history_file
             history_lst = read_history_file(curpath)
