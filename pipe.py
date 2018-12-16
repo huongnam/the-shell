@@ -86,9 +86,18 @@ def handle_pipe(args):
     print(args)
     indicators = [">", ">>", "<", "<<", "2>", "2>>"]
     # pattern = "(<<?\s?\w?|\d?>>?\s?\w?)"
-    # pattern = "(\d?>>?|<<?\d?)"
+    pattern = "(>>?|<<?)"
     # args = split(pattern, args)
-    pattern = ('(.*)(<<*)(.*)(>>*)(.*)')
+    # if "<<" in args:
+    #     pattern = ('(.*)(<<)(.*)(>+|>>)(.*)')
+    # elif "<" in args:
+    #     pattern = ('(.*)(<)(.*)(>>*)(.*)')
+    # elif ">>" in args:
+    #     pattern = ('(.*)(<<*)(.*)(>>)(.*)')
+    # elif ">" in args:
+    #     pattern = ('(.*)(<<*)(.*)(>)(.*)')
+    # else:
+    # pattern = "(<<?\s?\w*\d*>>?\s?\w*\d*)"
     print(split(pattern, args))
     # print(args)
     new_args = " ".join(item for item in args)
