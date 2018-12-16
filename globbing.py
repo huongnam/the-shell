@@ -10,6 +10,12 @@ def pre_glob(pattern):
 def do_globbing(pattern):
     out = glob(pattern)
     result = set(out)
+
+    # case .? / .?*
+    if pattern.startswith('.?') and '/' not in pattern:
+        result.add('..')
+
+    # case .*/.*
     if '.*' in pattern:
         dot_asterisk_num = pattern.count('.*')
 
@@ -28,3 +34,5 @@ def do_globbing(pattern):
                 pattern[dot_asterisk_idxs[i]] = case[i]
                 result.update(glob(''.join(pattern)))
     return list(result)
+
+print(do_globbing('.?*/.*'))
