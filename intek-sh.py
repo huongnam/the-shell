@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-from shlex import split
 from history import write_history_file, read_history_file, print_history
 from history import handle_command, handle_special_case, expand_history_file
 from exit_status import get_exit_status
@@ -34,7 +33,7 @@ def process_function(functions, command, args):
 def handle_input(_args, exit_code):
     type_in = []
     replace_things = []
-    _args = split(_args)
+    _args = _args.split()
     for element in _args:
         if element:
             # exit status
@@ -98,32 +97,35 @@ def main():
         _args = input('\033[92m\033[1mintek-sh$\033[0m ')
 
         # expand history_file
-        hist_written = expand_history_file(_args, special_cases, curpath)
+        history_lst = read_history_file(curpath)
+        hist_written = expand_history_file(_args, special_cases, curpath,
+                                           history_lst)
 
-        # get args and check existence
-        try:
-            args, exist = get_args(curpath, _args)
-        except FileNotFoundError:
+        # get args and check existence of _args in history_lst
+        args, exist = get_args(curpath, _args)
+        # if there is no command typed in so far
+        if not args and not exist:
+            print('intek-sh: there\'s nothing in the history list')
             continue
-        if not hist_written and not args.startswith('!'):
-            write_history_file(args, curpath)
+        # check if the after args in history_lst
+        if not hist_written:
+            history_lst = read_history_file(curpath)
+            hist_written = expand_history_file(_args, special_cases, curpath,
+                                               history_lst)
 
-        # when to continue or pass
-        try:
-            args = handle_special_case(exist, args)
-        except ValueError:
+        # when to continue
+        continue_flag, args = handle_special_case(exist, args)
+        if continue_flag:
             continue
-        except Exception:
-            pass
 
         type_in = handle_input(args, exit_code)
         if type_in:
             command = type_in[0]
             if command in functions.keys():
-                if 'history' in command:
+                if 'history' in type_in[0]:
                     history_lst = read_history_file(curpath)
-                    flag = process_function(functions, command,
-                                            history_lst)
+                    exit_code = print_history(type_in, history_lst)
+                    flag = True
                 else:
                     flag, exit_code = process_function(functions, command,
                                                        type_in)
