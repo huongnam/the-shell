@@ -8,6 +8,7 @@ from signal import signal, SIGINT, SIGTERM, SIGQUIT, SIG_IGN, SIGTSTP
 from sys import exit
 from input_excuting import input_excuting
 from logical_operator import handle_logical_operator
+from command_substitution import command_substitution
 from builtins_package.process_cd import cd
 from builtins_package.process_exit import sh_exit
 from builtins_package.process_export import export
@@ -128,6 +129,8 @@ def main():
 
             if "&&" in args or "||" in args:
                 flag, exit_code = handle_logical_operator(args, functions)
+            if "`" in args:
+                command_substitution(args, functions)
             else:
                 flag, exit_code = input_excuting(args, functions)
 
