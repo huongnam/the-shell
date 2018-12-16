@@ -1,4 +1,3 @@
-from os import path
 '''
 Event Designators
      An event designator is a reference to a command line entry in
@@ -30,22 +29,80 @@ def write_history_file(args, curpath):
     history_file.close()
 
 
+def check_and_write_history_file(args, curpath):
+    written = False
+    if '!#' not in args and '^' not in args:
+        write_history_file(args, curpath)
+        written = True
+    return written
+
+
+def expand_history_file(_args, special_cases, curpath, history_lst):
+    written = False
+    if not _args.startswith('!') and _args not in special_cases and\
+            not _args.startswith(' '):
+        if history_lst:
+            """ if the current command is different from the previous
+            one in history list """
+            if _args != history_lst[-1].strip('\n'):
+                written = check_and_write_history_file(_args, curpath)
+        else:
+            written = check_and_write_history_file(_args, curpath)
+    return written
+
+
 def read_history_file(curpath):
-    history_file = open(curpath + '/.intek-sh_history', 'r')
+    try:
+        history_file = open(curpath + '/.intek-sh_history', 'r')
+    except FileNotFoundError:
+        return None
     history_lst = history_file.readlines()
     history_file.close()
     return history_lst
 
 
-def print_history(history_lst):
-    for index, element in enumerate(history_lst):
+def raw_print(no, lst, to):
+    ''' to: from `to` to the end of the list
+        no: number of the line'''
+    for index, element in enumerate(lst[to:]):
         # justify columns
         element = element.strip('\n')
         # right justify the numbers
-        _order = str(index+1).rjust(len(str(len(history_lst))), ' ')
+        _order = str(no + index+1).rjust(len(str(len(lst))), ' ')
         # left justify the commands
-        command = element.ljust(len(max(history_lst, key=len)), ' ')
+        command = element.ljust(len(max(lst, key=len)), ' ')
         print(' ' * 4 + _order + '  ' + command)
+
+
+def print_history(type_in, history_lst):
+    if len(type_in) == 1:
+        ''' command: history '''
+        raw_print(0, history_lst, 0)
+        return 0
+
+    elif len(type_in) == 2:
+        ''' command: history randomstring '''
+        if type_in[-1].isdigit():
+            # if randomstring is numeric
+            num = int(type_in[-1])
+            if num < len(history_lst):
+                # if the number is less than length of the list
+                raw_print((len(history_lst) - num),
+                          history_lst, (len(history_lst) - num))
+            else:
+                # if the number is less than length of the list
+                raw_print(0, history_lst, 0)
+            return 0
+        else:
+            # if randomstring is anything else
+            print('intek-sh: history: {}: numeric argument required'.format(
+                  type_in[-1]))
+            return 1
+
+    elif len(type_in) > 2:
+        ''' command: history randomstring randomstring ... '''
+        print('intek-sh: history: too many arguments')
+        return 148
 
 
 # replace args as cmd and print it
@@ -57,7 +114,6 @@ def print_args(args, cmd):
 
 def handle_special_case(exist, args):
     continue_flag = False
-    pass_flag = False
     if args.startswith('!'):
         # no matched event in history_lst
         if not exist:
@@ -70,20 +126,13 @@ def handle_special_case(exist, args):
             # command starts with ! and followed by a blank space
             if len(args) is 1 or args == '! ':
                 continue_flag = True
-            # command starts with '!=' -> command not found
-            elif args[1] is '=':
-                pass_flag = True
-            # command type: ! with multiple spaces and random string
-            elif len(args) > 2:
-                args = args.strip('!').strip(' ')
-                pass_flag = True
     # substitution errors
     elif args.startswith('^') and sub_failed:
         continue_flag = True
     # out of capability
     elif alert:
         continue_flag = True
-    return continue_flag, pass_flag, args
+    return continue_flag, args
 
 
 def handle_emotion_prefix(args, history_lst):

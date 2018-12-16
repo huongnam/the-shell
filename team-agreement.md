@@ -7,29 +7,24 @@
 
 - the strengths and weaknesses of each member, and how to leverage/mitigate them for the project:
 *Minh*
-+ drinks coffee everyday, makes others feel energetic
-- age, time-management
+(-) schedule not blended well with the other members
 *Nam*
-+ cute
-- short of time, don't have the habit of planning and keeping track of work
+(+) no strengths
+(-) short of time, don't have the habit of planning and keeping track of work
 *Tran*
-+ she's like a blank sheet of paper that we can tear off without any regret
-- young
+(-) hot-tempered
 
 - the allocation of the workload:
-Minh 33.(3); Nam 33.(3); Tran 33.(3)
- We try to finish 6 features first. If there is time left, the remaining features will be taken in to consideration.
-
+Minh 20; Nam 30; Tran 50
 
 - the features you want to implement and how they interface together:
 
 Minh: globbing ★✩✩✩
       path expansions (tilde expansions, parameter expansions) ★✩✩✩
-Nam: quoting (quotes & escape characters) ★✩✩✩
-     command substitution with the backquotes ★★✩✩
+Nam:  pipes & the redirections >, <, >> and << ★★★✩
+      command substitution with the backquotes ★★✩✩
+      logical operators && and || ★★✩✩
 Tran: handling the exit status of commands ★✩✩✩
-     the command history with the builtins history and ! ★★✩✩
-<<<<<<< HEAD
-
-=======
->>>>>>> develop
+      signals handling ★★✩✩
+      the command history with the builtins history and ! ★★✩✩
+      dynamic command completion ★★✩✩
