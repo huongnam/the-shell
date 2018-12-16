@@ -5,6 +5,8 @@ from exit_status import get_exit_status
 from dynamic import make_subcommand_completer
 from readline import parse_and_bind, set_completer, set_completer_delims
 from os import environ, listdir, path
+from signal import signal, SIGINT, SIGTERM, SIGQUIT, SIG_IGN, SIGTSTP
+from sys import exit
 from builtins_package.process_cd import cd
 from builtins_package.process_exit import sh_exit
 from builtins_package.process_export import export
@@ -20,6 +22,13 @@ export  : mark each name to be passed to child processes in the environment
 unset   : remove each variable or function name
 exit    : end process
 '''
+
+
+def handle_interrupt(signum, frame):
+    ''' KeyboardInterrupt's exit_code: 130'''
+    global exit_code
+    exit_code = 130
+    raise KeyboardInterrupt
 
 
 def process_function(functions, command, args):
@@ -85,52 +94,72 @@ def main():
             'exit': sh_exit,
             'history': print_history
             }
-    while flag:
-        # get all the command in environment PATH
-        get_all_cmds()
+    try:
+        while flag:
+            ''' Ctrl + C '''
+            signal(SIGINT, handle_interrupt)
 
-        parse_and_bind('tab: complete')
-        set_completer(make_subcommand_completer(commands))
-        set_completer_delims(" \t")
+            ''' Ctrl + "\" '''
+            signal(SIGQUIT, SIG_IGN)
 
-        hist_written = False
-        _args = input('\033[92m\033[1mintek-sh$\033[0m ')
+            ''' the signal that is sent by default by the kill, pkill,
+            killall, fuser -k... commands'''
+            signal(SIGTERM, SIG_IGN)
 
-        # expand history_file
-        history_lst = read_history_file(curpath)
-        hist_written = expand_history_file(_args, special_cases, curpath,
-                                           history_lst)
+            ''' Ctrl + Z '''
+            signal(SIGTSTP, SIG_IGN)
 
-        # get args and check existence of _args in history_lst
-        args, exist = get_args(curpath, _args)
-        # if there is no command typed in so far
-        if not args and not exist:
-            print('intek-sh: there\'s nothing in the history list')
-            continue
-        # check if the after args in history_lst
-        if not hist_written:
+            # get all the command in environment PATH
+            get_all_cmds()
+
+            parse_and_bind('tab: complete')
+            set_completer(make_subcommand_completer(commands))
+            set_completer_delims(" \t")
+
+            hist_written = False
+            _args = input('\033[92m\033[1mintek-sh$\033[0m ')
+
+            # expand history_file
             history_lst = read_history_file(curpath)
             hist_written = expand_history_file(_args, special_cases, curpath,
                                                history_lst)
 
-        # when to continue
-        continue_flag, args = handle_special_case(exist, args)
-        if continue_flag:
-            continue
+            # get args and check existence of _args in history_lst
+            args, exist = get_args(curpath, _args)
+            # if there is no command typed in so far
+            if not args and not exist:
+                print('intek-sh: there\'s nothing in the history list')
+                continue
+            # check if the after args in history_lst
+            if not hist_written:
+                history_lst = read_history_file(curpath)
+                hist_written = expand_history_file(_args, special_cases, curpath,
+                                                   history_lst)
 
-        type_in = handle_input(args, exit_code)
-        if type_in:
-            command = type_in[0]
-            if command in functions.keys():
-                if 'history' in type_in[0]:
-                    history_lst = read_history_file(curpath)
-                    exit_code = print_history(type_in, history_lst)
-                    flag = True
+            # when to continue
+            continue_flag, args = handle_special_case(exist, args)
+            if continue_flag:
+                continue
+
+            type_in = handle_input(args, exit_code)
+            if type_in:
+                command = type_in[0]
+                if command in functions.keys():
+                    if 'history' in type_in[0]:
+                        history_lst = read_history_file(curpath)
+                        exit_code = print_history(type_in, history_lst)
+                        flag = True
+                    else:
+                        flag, exit_code = process_function(functions, command,
+                                                           type_in)
                 else:
-                    flag, exit_code = process_function(functions, command,
-                                                       type_in)
-            else:
-                exit_code = run_file(type_in)
+                    exit_code = run_file(type_in)
+    except KeyboardInterrupt:
+        print('^C')
+        main()
+    except EOFError:
+        print()
+        exit(0)
 
 
 if __name__ == '__main__':
