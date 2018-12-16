@@ -1,5 +1,6 @@
 from input_excuting import input_excuting
 
+
 #  returns a list seperated by the operator && or ||
 def split_operator(args, operator):
     args = args.split(sep=operator)
@@ -7,6 +8,7 @@ def split_operator(args, operator):
 
 
 def handle_and(args, functions):
+    #  if the first command succeeds, excute the second
     exit_code = 0
     flag = False
     for item in args:
@@ -14,7 +16,9 @@ def handle_and(args, functions):
             flag, exit_code = input_excuting(item, functions)
     return flag, exit_code
 
+
 def handle_or(args, functions):
+    #  if the first command fails, excute the second
     exit_code = 1
     flag = False
     for item in args:
@@ -22,6 +26,7 @@ def handle_or(args, functions):
             flag, exit_code = input_excuting(item, functions)
             break
     return flag, exit_code
+
 
 def handle_logical_operator(args, functions):
     _args = args
