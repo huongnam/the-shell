@@ -127,16 +127,17 @@ def main():
             continue_flag, args = handle_special_case(exist, args)
             if continue_flag:
                 continue
-
-            if ">" in args or "<" in args or "|" in args:
-                handle_pipe(args)
-            # elif "&&" in args or "||" in args:
-            #     flag, exit_code = handle_logical_operator(args, functions)
-            # elif "`" in args:
-            #     command_substitution(args, functions)
-            #
-            # else:
-            #     flag, exit_code = input_excuting(args, functions)
+            if "&&" in args or "||" in args:
+                flag, exit_code = handle_logical_operator(args, functions)
+            elif ">" in args or "<" in args or "|" in args:
+                if "||" in args:
+                    pass
+                else:
+                    handle_pipe(args)
+            elif "`" in args:
+                command_substitution(args, functions)
+            else:
+                flag, exit_code = input_excuting(args, functions)
 
     except KeyboardInterrupt:
         print('^C')

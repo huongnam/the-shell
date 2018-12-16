@@ -111,9 +111,7 @@ def handle_pipe(args):
         command = get_in_path(command)
         if command is None:
             break
-    '''
-    if i == len(commands) - 1, this is the final pipe to do
-    '''
+        #  if i == len(commands) - 1, this is the final pipe to do
         temp_pipe = handle_redirection(command, temp_pipe, i==len(commands)-1)
-    #  receives the original sys.stdout, sys.stdin, sys.stderr stored before
+        #  receives the original sys.stdout, sys.stdin, sys.stderr stored before
         sys.stdout, sys.stdin, sys.stderr = _out, _in, _err
