@@ -7,7 +7,7 @@ from builtin import *
 from readline import parse_and_bind
 from logical_operator import *
 from pipe import *
-from ha import command_substitution
+# from ha import command_substitution
 '''
 cd      : change directory
 printenv: print all or part of environment
@@ -49,6 +49,60 @@ def get_args(curpath, _args):
         raise FileNotFoundError
     args, exist = handle_command(_args, history_lst)
     return args, exist
+
+
+
+
+def get_what_inside_the_backquotes(string):
+    lst_command = []
+    count = 0
+    if "``" in string:
+        string = string.replace("``", "")
+    while "`" in string:
+        for i in range(len(string)):
+            if "`" in string:
+                if string[i] == "`":
+                    j = i
+                    while string[j+1] != "`":
+                        j += 1
+                    lst_command.append(string[i+1:j+1])
+                    string = string.replace(string[i:j+2], str(count))
+                    count += 1
+    return [lst_command, string.strip().split()]
+
+
+# print(get_what_inside_the_backquotes("echo `echo nam` `echo tran` asdsa"))
+
+
+
+def command_substitution(args, functions):
+    inside_backquotes = get_what_inside_the_backquotes(args)[0]
+    command_line = get_what_inside_the_backquotes(args)[1]
+    # print(lst_commands)
+    commands_to_do = []
+    for item in inside_backquotes:
+    # try:
+        out = sub.run(item.split(), stdout=sub.PIPE)
+        out = out.stdout.decode().strip()
+        print("1111"+out+"222")
+        commands_to_do.append(out)
+    # except Fil
+
+    # print(commands_to_do)
+    if commands_to_do:
+        for i in range(len(commands_to_do)):
+            for j in range(len(command_line)):
+                if command_line[j] == str(i):
+                    command_line[j] = commands_to_do[i]
+    # print(command_line)
+    while "" in command_line:
+        for item in command_line:
+            if item == "":
+                command_line.remove(item)
+    # print(command_line)
+    new_command_line = " ".join(item for item in command_line)
+    # print(new_command_line)
+    dep(new_command_line, functions)
 
 
 def dep(item, functions):
@@ -116,19 +170,27 @@ def main():
         except ValueError:
             continue
 
-        if "&&" in args or "||" in args:
-            # print(1)
-            handle_logical_operator(args, functions)
-        indicators = [">", ">>", "<", "<<", "2>", "2>>", "|"]
-        for i in range(len(args)):
-            if args[i] in indicators:
-                handle_pipe(args)
-                break
+        #
+        # indicators = [">", ">>", "<", "<<", "2>", "2>>", "|"]
+        # for i in range(len(args)):
+        #     if args[i] in indicators:
+                # handle_pipe(args)
+        #         break
+            # continue
+        # if "&&" in args or "||" in args:
+        #     # print(1)
+        #     print("buc minh logical")
+        #     handle_logical_operator(args, functions)
+        #
         # if "`" in args:
-        #     command_substitution()
-        else:
-            # print(2)
-            dep(args, functions)
+        #     # print("buc minh")
+        #     command_substitution(args, functions)
+        handle_pipe(args)
+        # else:
+        #     # print(2)
+        #
+        #     print("buc minh dep")
+        #     dep(args, functions)
         # lst = []
         # for i in lst:
         #

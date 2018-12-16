@@ -1,7 +1,8 @@
-from builtin import run_file
+# from builtin import run_file
 import os
 import sys
 import subprocess as sub
+from re import split, compile
 
 def tai_Tran_moi_co_ham_nay(args):
     try:
@@ -40,11 +41,12 @@ def handle_redirection(command, _input, flag):
         if command[i] in indicators:
             file_name = command[i+1]
 
-            if command[i] == ">":
+            if command[i] == ">" and command[i-1] != ">" and command[i+1] != ">":
+                print("co vo day k")
                 flag = redirect_out(file_name, "w")
-                print(flag)
+                # print(flag)
             elif command[i] == ">>":
-
+                print("hay la vo day")
                 redirect_out(file_name, "a")
             elif command[i] == "<":
                 _input = redirect_in(file_name)
@@ -66,8 +68,8 @@ def handle_redirection(command, _input, flag):
             else:
                 print("chac la zo day")
             lst_file.append(file_name)
-            print(lst_file)
-            print("111" + file_name + "222")
+            # print(lst_file)
+            # print("111" + file_name + "222")
 
     for item in command:
         if item not in lst_file and item not in indicators:
@@ -81,7 +83,76 @@ def handle_redirection(command, _input, flag):
 
 
 def handle_pipe(args):
-    commands = args.split("|")
+    print(args)
+    indicators = [">", ">>", "<", "<<", "2>", "2>>"]
+    # pattern = "(<<?\s?\w?|\d?>>?\s?\w?)"
+    # pattern = "(\d?>>?|<<?\d?)"
+    # args = split(pattern, args)
+    pattern = ('(.*)(<<*)(.*)(>>*)(.*)')
+    print(split(pattern, args))
+    # print(args)
+    new_args = " ".join(item for item in args)
+    # print(args)
+    # new_args = []
+    # args = args.split()
+    # #
+    # for i in range(len(args)):
+    #     if ">" in args[i] or "<" in args[i]:
+    #         # while ">" in args[i] or "<" in args[i]:
+    #         for j in range(len(args[i])):
+    #             try:
+    #                 if args[i][j] in indicators:
+    #                     if j == 1 and args[i][0] in "1234567890":
+    #                         print("hoho")
+    #                         if args[i][2] == args[i][j]:
+    #                             print("vo day")
+    #                             new_args.append(args[i][:3])
+    #                             args[i] = args[i].replace(args[i][:3], "", 1)
+    #                         else:
+    #                             print("hay la vo day")
+    #                             new_args.append(args[i][:2])
+    #                             args[i] = args[i].replace(args[i][:2], "", 1)
+    #
+    #                     else:
+    #                         print(args[i])
+    #                         print("to")
+    #                         if args[i][j+1] == args[i][j]:
+    #                             new_args.append(args[i][:j])
+    #
+    #                             new_args.append(args[i][j:j+2])
+    #                             args[i] = args[i].replace(args[i][:j+2], "", 1)
+    #                             print(args[i])
+    #                         else:
+    #                             print("di vo day")
+    #             except IndexError:
+    #                 pass
+    #     else:
+    #         new_args.append(args[i])
+
+#
+# if "``" in string:
+#     string = string.replace("``", "")
+# while "`" in string:
+#     for i in range(len(string)):
+#         if "`" in string:
+#             if string[i] == "`":
+#                 j = i
+#                 while string[j+1] != "`":
+#                     j += 1
+#                 lst_command.append(string[i+1:j+1])
+#                 string = string.replace(string[i:j+2], str(count))
+#                 count += 1
+# return [lst_command, string.strip().split()]
+
+    #
+    # print(new_args)
+    #
+    # #         if args[i - 1] is not " " or args[i + 1] is not " ":
+    # #             new_str = " " + args[i] + " "
+    # #             args = args.replace(args[i], new_str)
+    # # args
+    # print(args)
+    commands = new_args.split("|")
     temp_pipe = None
     _out, _in, _err = sys.stdout, sys.stdin, sys.stderr
     for item in commands:
@@ -89,9 +160,11 @@ def handle_pipe(args):
         item = item.split()
         for i in range(len(item)):
             if item[i] == ">":
+                print("ha")
+                if item[i-1] != ">" and item[i+1] != ">":
                 # print(item)
-                # print("ho")
-                new_file = open(item[i+1], "w")
+                    print("ho")
+                    new_file = open(item[i+1], "w")
     for i in range(len(commands)):
         # cho nay can globbing, path exansion nua
         command = commands[i].split()
